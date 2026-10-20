@@ -34,3 +34,9 @@ export async function seedWorld(prisma: PrismaClient): Promise<World> {
     captainOf: (teamId) => users.find((u) => u.teamId === teamId)!,
   };
 }
+
+export async function loginAs(app: App, username: string, password: string): Promise<string> {
+  const res = await app.inject({ method: "POST", url: "/api/auth/login", payload: { username, password } });
+  if (res.statusCode !== 200) throw new Error(`login failed: ${res.body}`);
+  return `session=${res.cookies[0]!.value}`;
+}

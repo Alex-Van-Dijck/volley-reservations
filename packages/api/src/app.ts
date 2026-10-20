@@ -2,6 +2,7 @@ import cookie from "@fastify/cookie";
 import Fastify from "fastify";
 import type { Deps } from "./db.js";
 import { AppError, sendProblem } from "./errors.js";
+import { authRoutes } from "./routes/auth.js";
 import { readRoutes } from "./routes/read.js";
 
 export function buildApp(deps: Deps) {
@@ -17,7 +18,15 @@ export function buildApp(deps: Deps) {
   });
   app.setNotFoundHandler((_req, reply) => sendProblem(reply, "NOT_FOUND", "Route not found"));
 
+  app.addHook("preHandler", async (req) => {
+    const mutating = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method);
+    if (mutating && req.body != null && !req.headers["content-type"]?.startsWith("application/json")) {
+      throw new AppError("VALIDATION_ERROR", "Content-Type must be application/json");
+    }
+  });
+
   readRoutes(app, deps);
+  authRoutes(app, deps);
   return app;
 }
 
