@@ -32,7 +32,17 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/")));
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            void caches.open(CACHE).then((cache) => cache.put("/", copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match("/")),
+    );
     return;
   }
 
@@ -41,8 +51,10 @@ self.addEventListener("fetch", (event) => {
       (hit) =>
         hit ||
         fetch(request).then((res) => {
-          const copy = res.clone();
-          void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          if (res.ok) {
+            const copy = res.clone();
+            void caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
           return res;
         }),
     ),

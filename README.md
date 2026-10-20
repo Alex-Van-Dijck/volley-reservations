@@ -15,6 +15,8 @@ pnpm --filter @volley/api dev     # http://localhost:3000
 pnpm --filter @volley/web dev     # http://localhost:5173, proxies /api
 ```
 
+The seed creates a `manager` user and one `captain<n>` user per team (`captain1`, `captain2`, ...). Their passwords come from `SEED_MANAGER_PASSWORD` and `SEED_CAPTAIN_PASSWORD` in `packages/api/.env` and default to `change-me`. Set real values before seeding any shared environment.
+
 ## Tests
 
 ```bash
