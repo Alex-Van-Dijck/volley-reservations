@@ -11,3 +11,7 @@ export async function resetDb(prisma: PrismaClient): Promise<void> {
     'TRUNCATE "Session", "Event", "Block", "User", "Slot", "Field", "Team", "Setting" RESTART IDENTITY CASCADE',
   );
 }
+
+export async function clearBookings(prisma: PrismaClient): Promise<void> {
+  await prisma.$executeRawUnsafe('TRUNCATE "Session", "Event", "Block" CASCADE');
+}

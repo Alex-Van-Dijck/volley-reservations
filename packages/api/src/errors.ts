@@ -32,7 +32,7 @@ export class AppError extends Error {
   }
 }
 
-export function sendProblem(reply: FastifyReply, code: ErrorCode, detail: string, status = STATUS[code]) {
+export function sendProblem(reply: FastifyReply, code: ErrorCode, detail: string, status: number = STATUS[code]) {
   const title = code.charAt(0) + code.slice(1).toLowerCase().replaceAll("_", " ");
   return reply
     .code(status)
