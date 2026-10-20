@@ -5,6 +5,7 @@ import { useAuth } from "../auth-context";
 import { errorMessage, formatDay, statusLabel } from "../format";
 import { useLoad } from "../hooks";
 import type { CalendarSlot, Config, TeamDay, User } from "../types";
+import { BlockPanel } from "./BlockPanel";
 
 export function ManagePage() {
   const { user, loading } = useAuth();
@@ -71,6 +72,7 @@ function ManageTeam({ user }: { user: User }) {
           />
         ))}
       </ul>
+      {user.role === "manager" && <BlockPanel days={calendar.data.days} config={cfg} run={run} />}
     </section>
   );
 }
