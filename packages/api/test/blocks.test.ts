@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { App } from "../src/app.js";
-import { toDate } from "../src/db.js";
+import { lockCells, toDate, transact } from "../src/db.js";
 import { clearBookings, testPrisma } from "./db.js";
 import { buildTestApp, loginAs, PASSWORDS, seedWorld, type World } from "./helpers.js";
 
@@ -98,21 +98,53 @@ describe("DELETE /api/blocks/:date/:slotId", () => {
 });
 
 describe("blocking versus booking", () => {
-  it("never ends with both a block and a home game", async () => {
-    const [block, book] = await Promise.all([
-      send("PUT", blockUrl(), manager),
-      send("POST", "/api/events", cap1, {
-        teamId: w.teams[0]!.id,
-        date: THU1,
-        slotId: w.slot.id,
-        type: "home",
-        fieldId: w.fields[0]!.id,
-      }),
-    ]);
+  it("queues both writers behind the cell lock and keeps block and home game exclusive", async () => {
+    let locked!: () => void;
+    const lockHeld = new Promise<void>((resolve) => (locked = resolve));
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const holder = transact(prisma, async (tx) => {
+      await lockCells(tx, [{ date: THU1, slotId: w.slot.id }]);
+      locked();
+      await gate;
+    });
+    await lockHeld;
+
+    const settled = { block: false, book: false };
+    const blockReq = send("PUT", blockUrl(), manager).then((res) => {
+      settled.block = true;
+      return res;
+    });
+    const bookReq = send("POST", "/api/events", cap1, {
+      teamId: w.teams[0]!.id,
+      date: THU1,
+      slotId: w.slot.id,
+      type: "home",
+      fieldId: w.fields[0]!.id,
+    }).then((res) => {
+      settled.book = true;
+      return res;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    const whileLocked = { ...settled };
+    release();
+    await holder;
+    const [block, book] = await Promise.all([blockReq, bookReq]);
+
+    expect(whileLocked).toEqual({ block: false, book: false });
     const blocks = await prisma.block.count();
     const homes = await prisma.event.count({ where: { type: "home" } });
     expect(blocks + homes).toBe(1);
-    if (block.statusCode === 200) expect(book.json().code).toBe("SLOT_BLOCKED");
-    else expect(block.json().code).toBe("BLOCK_HAS_HOME_GAMES");
+    if (block.statusCode === 200) {
+      expect(blocks).toBe(1);
+      expect(book.statusCode).toBe(409);
+      expect(book.json().code).toBe("SLOT_BLOCKED");
+    } else {
+      expect(homes).toBe(1);
+      expect(block.statusCode).toBe(409);
+      expect(block.json().code).toBe("BLOCK_HAS_HOME_GAMES");
+      expect(book.statusCode).toBe(201);
+    }
   });
 });
