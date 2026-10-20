@@ -11,6 +11,14 @@ export function buildApp(deps: Deps) {
   const app = Fastify({ logger: deps.production, trustProxy: deps.trustProxy ?? false });
   app.register(cookie);
 
+  // Fastify rejects an empty body sent as application/json; treat it as no body instead.
+  const defaultJson = app.getDefaultJsonParser("error", "error");
+  app.removeContentTypeParser("application/json");
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
+    if (body.length === 0) return done(null, undefined);
+    defaultJson(req, body as string, done);
+  });
+
   app.setErrorHandler((err: Error, req, reply) => {
     if (err instanceof AppError) return sendProblem(reply, err.code, err.message);
     const status = (err as { statusCode?: number }).statusCode;
