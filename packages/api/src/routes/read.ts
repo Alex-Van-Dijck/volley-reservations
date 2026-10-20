@@ -11,7 +11,8 @@ export function readRoutes(app: App, deps: Deps): void {
   async function rangeFor(query: unknown) {
     const settings = await loadSettings(prisma);
     const today = todayIn(settings.timezone, deps.now());
-    return { settings, ...resolveRange((query ?? {}) as RangeQuery, today, settings.seasonEnd) };
+    const range = resolveRange((query ?? {}) as RangeQuery, today, settings.seasonEnd);
+    return { settings, from: range.from, to: range.to > settings.seasonEnd ? settings.seasonEnd : range.to };
   }
 
   async function loadCells(from: string, to: string) {
@@ -65,6 +66,7 @@ export function readRoutes(app: App, deps: Deps): void {
       fields: fields.map((f) => ({ id: f.id, name: f.name, size: f.size })),
       slots: slots.map((s) => ({ id: s.id, weekday: s.weekday, start: fmtTime(s.start), end: fmtTime(s.end) })),
       seasonEnd: settings.seasonEnd,
+      timezone: settings.timezone,
       today: todayIn(settings.timezone, deps.now()),
     };
   });
@@ -88,7 +90,8 @@ export function readRoutes(app: App, deps: Deps): void {
   });
 
   app.get("/api/teams/:id/schedule", async (req) => {
-    const id = Number((req.params as { id: string }).id);
+    const raw = (req.params as { id: string }).id;
+    const id = /^\d+$/.test(raw) ? Number(raw) : NaN;
     const team = Number.isInteger(id) ? await prisma.team.findUnique({ where: { id } }) : null;
     if (!team) throw new AppError("NOT_FOUND", "Team not found");
     const { settings, from, to } = await rangeFor(req.query);

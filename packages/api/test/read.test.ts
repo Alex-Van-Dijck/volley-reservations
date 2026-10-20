@@ -24,7 +24,7 @@ afterAll(async () => {
 });
 
 describe("GET /api/config", () => {
-  it("returns teams, fields, slots, season end and today", async () => {
+  it("returns teams, fields, slots, season end, timezone and today", async () => {
     const res = await app.inject({ url: "/api/config" });
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -32,6 +32,7 @@ describe("GET /api/config", () => {
     expect(body.fields.map((f: { name: string }) => f.name)).toEqual(["Field 1", "Field 2"]);
     expect(body.slots).toEqual([{ id: w.slot.id, weekday: 4, start: "20:00", end: "22:00" }]);
     expect(body.seasonEnd).toBe("2027-08-31");
+    expect(body.timezone).toBe("Europe/Brussels");
     expect(body.today).toBe("2026-10-20");
   });
 });
@@ -68,6 +69,17 @@ describe("GET /api/calendar", () => {
     expect(res.json().code).toBe("VALIDATION_ERROR");
   });
 
+  it("clips the range to the season end", async () => {
+    const res = await app.inject({ url: "/api/calendar?from=2027-08-01&to=2027-09-30" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().days.map((d: { date: string }) => d.date)).toEqual([
+      "2027-08-05",
+      "2027-08-12",
+      "2027-08-19",
+      "2027-08-26",
+    ]);
+  });
+
   it("returns no days when the range starts after the season end", async () => {
     const res = await app.inject({ url: "/api/calendar?from=2027-09-01&to=2027-09-30" });
     expect(res.statusCode).toBe(200);
@@ -97,6 +109,17 @@ describe("GET /api/teams/:id/schedule", () => {
     expect(fourth.days[0].practiceFieldIds).toEqual([w.fields[1]!.id]);
   });
 
+  it("clips the range to the season end", async () => {
+    const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-08-01&to=2027-09-30` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().days.map((d: { date: string }) => d.date)).toEqual([
+      "2027-08-05",
+      "2027-08-12",
+      "2027-08-19",
+      "2027-08-26",
+    ]);
+  });
+
   it("returns no days when the range starts after the season end", async () => {
     const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-09-01&to=2027-09-30` });
     expect(res.statusCode).toBe(200);
@@ -105,6 +128,12 @@ describe("GET /api/teams/:id/schedule", () => {
 
   it("returns 404 for an unknown team", async () => {
     const res = await app.inject({ url: "/api/teams/999/schedule" });
+    expect(res.statusCode).toBe(404);
+    expect(res.json().code).toBe("NOT_FOUND");
+  });
+
+  it.each(["1.0", " 1", "1e0", "-1", "abc"])("returns 404 for the malformed team id %j", async (raw) => {
+    const res = await app.inject({ url: `/api/teams/${encodeURIComponent(raw)}/schedule` });
     expect(res.statusCode).toBe(404);
     expect(res.json().code).toBe("NOT_FOUND");
   });
