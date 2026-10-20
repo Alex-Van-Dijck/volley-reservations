@@ -30,4 +30,5 @@ The API test setup applies migrations to `volley_test` itself, so only `docker c
 
 Build with `pnpm --filter @volley/web build` and serve `packages/web/dist` and the API from the same origin
 (for example one reverse proxy that serves the static files and forwards `/api` to the Fastify process).
+Set `TRUST_PROXY=1` when running behind a reverse proxy, otherwise the per-IP login rate limit counts all users as one client.
 Set `NODE_ENV=production` so the session cookie is `Secure`, and serve over HTTPS (required for the service worker).

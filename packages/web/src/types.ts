@@ -3,7 +3,7 @@ export type User = { id: string; username: string; role: Role; teamId: number | 
 export type Team = { id: number; name: string };
 export type Field = { id: number; name: string; size: string };
 export type Slot = { id: number; weekday: number; start: string; end: string };
-export type Config = { teams: Team[]; fields: Field[]; slots: Slot[]; seasonEnd: string; today: string };
+export type Config = { teams: Team[]; fields: Field[]; slots: Slot[]; seasonEnd: string; today: string; timezone: string };
 
 export type CalendarSlot = {
   slotId: number;
