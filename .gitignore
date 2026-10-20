@@ -11,6 +11,9 @@ out/
 # Generated from packages/contract/openapi.yaml
 packages/*/src/generated/
 
+# Web PWA build output
+packages/web/dev-dist/
+
 # Tests and coverage
 coverage/
 playwright-report/

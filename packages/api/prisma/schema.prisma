@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EventType {
+  home
+  away
+}
+
+enum Role {
+  captain
+  manager
+}
+
+model Team {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  events Event[]
+  users  User[]
+}
+
+model Field {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  size   String
+  events Event[]
+}
+
+model Slot {
+  id      Int      @id @default(autoincrement())
+  weekday Int
+  start   DateTime @db.Time(0)
+  end     DateTime @db.Time(0)
+  events  Event[]
+  blocks  Block[]
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  username     String    @unique
+  passwordHash String
+  role         Role
+  teamId       Int?
+  team         Team?     @relation(fields: [teamId], references: [id])
+  sessions     Session[]
+  events       Event[]
+}
+
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  tokenHash  String   @unique
+  userId     String   @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+}
+
+model Event {
+  id        String    @id @default(uuid()) @db.Uuid
+  teamId    Int
+  date      DateTime  @db.Date
+  slotId    Int
+  type      EventType
+  fieldId   Int?
+  createdBy String    @db.Uuid
+  team      Team      @relation(fields: [teamId], references: [id])
+  slot      Slot      @relation(fields: [slotId], references: [id])
+  field     Field?    @relation(fields: [fieldId], references: [id])
+  creator   User      @relation(fields: [createdBy], references: [id])
+
+  @@unique([teamId, date, slotId])
+  @@unique([fieldId, date, slotId])
+}
+
+model Block {
+  id     String   @id @default(uuid()) @db.Uuid
+  date   DateTime @db.Date
+  slotId Int
+  reason String?
+  slot   Slot     @relation(fields: [slotId], references: [id])
+
+  @@unique([date, slotId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
