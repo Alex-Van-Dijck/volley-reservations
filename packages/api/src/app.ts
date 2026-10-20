@@ -3,6 +3,7 @@ import Fastify from "fastify";
 import type { Deps } from "./db.js";
 import { AppError, sendProblem } from "./errors.js";
 import { authRoutes } from "./routes/auth.js";
+import { blockRoutes } from "./routes/blocks.js";
 import { eventRoutes } from "./routes/events.js";
 import { readRoutes } from "./routes/read.js";
 
@@ -29,6 +30,7 @@ export function buildApp(deps: Deps) {
   readRoutes(app, deps);
   authRoutes(app, deps);
   eventRoutes(app, deps);
+  blockRoutes(app, deps);
   return app;
 }
 
