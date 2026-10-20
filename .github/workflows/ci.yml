@@ -36,3 +36,46 @@ jobs:
       - run: pnpm -r typecheck
       - run: pnpm -r test
       - run: pnpm --filter @volley/web build
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: volley
+          POSTGRES_PASSWORD: volley
+          POSTGRES_DB: volley
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U volley"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://volley:volley@localhost:5432/volley
+      SEED_MANAGER_PASSWORD: e2e-manager
+      SEED_CAPTAIN_PASSWORD: e2e-captain
+      E2E_USER: captain1
+      E2E_PASSWORD: e2e-captain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @volley/api exec prisma generate
+      - run: pnpm --filter @volley/api db:deploy
+      - run: pnpm --filter @volley/api db:seed
+      # The seeded season end is a fixed date; push it a year out so the test always finds a free date.
+      - run: psql "$DATABASE_URL" -c "UPDATE \"Setting\" SET value = to_char(current_date + 365, 'YYYY-MM-DD') WHERE key = 'season_end'"
+      - run: pnpm --filter @volley/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @volley/api dev > api.log 2>&1 &
+      - run: pnpm --filter @volley/web dev > web.log 2>&1 &
+      - run: npx --yes wait-on --timeout 60000 http-get://localhost:3000/api/config http-get://localhost:5173
+      - run: pnpm --filter @volley/web test:e2e
+      - if: failure()
+        run: cat api.log web.log

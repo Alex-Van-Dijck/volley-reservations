@@ -1,7 +1,7 @@
 # Volleyball Reservation System: Design Spec
 
 - Date: 2026-10-20
-- Status: Draft for review
+- Status: Implemented as v1, with the deviations listed in section 16
 - Inputs: `docs/volleyball-reservation-analysis.md`, `docs/adr/0001-system-architecture.md`, `docs/adr/0002-prisma-for-api-persistence.md`
 
 This spec turns the analysis into an implementable design. The architecture and its rationale are in the ADRs; this document defines scope, behaviour, interfaces, data and testing precisely enough to plan work from.
@@ -289,3 +289,17 @@ The detailed task breakdown for the subagent-driven workflow is produced by the 
 ## 15. Future expansion
 
 Weekend slots add slot rows. Because they have one field, a slot-to-field availability table will be added then. At launch both fields are always available, so the table is not created yet. The slot-as-data model, the unique constraints and the derived-state functions do not change.
+
+## 16. Amendments for v1 as built
+
+The v1 implementation (plan `docs/superpowers/plans/2026-10-20-volleyball-reservations.md`) deliberately simplified the design. Where this section and sections 6 to 13 disagree, this section describes the code.
+
+- Two packages only: `packages/api` and `packages/web`. There is no `packages/contract`, `packages/domain` or `packages/api-tests`, and no ports and adapters layering. Pure rules and derived state live in `packages/api/src/rules.ts`; routes call Prisma directly inside transactions.
+- No `openapi.yaml`. The contract is the route code plus `packages/web/src/types.ts`. The Fastify integration tests in `packages/api/test` take the role of the black-box suite; a contract and black-box suite for the Java port is planned with the port.
+- The advisory lock is taken with `pg_advisory_xact_lock` from a helper in the API package rather than through a `SlotLock` port. Locks are sorted before they are taken.
+- Calendar and team ranges are limited to 400 days. An explicit range longer than that is rejected with `VALIDATION_ERROR`; the default range (today through season end) is clipped to 400 days.
+- Error codes added beyond section 4: `RATE_LIMITED` (429) for login throttling and `INTERNAL` (500) for unexpected errors.
+- Blocks may be created on any date, including past dates. `DELETE /api/blocks/{date}/{slotId}` is idempotent and returns 204 even when no block exists.
+- An empty body under `Content-Type: application/json` is treated as no body (ADR 0003).
+- Sessions have no stored `expires_at`; expiry is derived from `lastUsedAt`.
+- CI runs typecheck, unit and integration tests, the web build, and a Playwright smoke test against a seeded database.

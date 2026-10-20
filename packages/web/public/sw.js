@@ -46,17 +46,19 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Stale-while-revalidate, so unhashed files like the manifest and icon still pick up changes.
   event.respondWith(
-    caches.match(request).then(
-      (hit) =>
-        hit ||
-        fetch(request).then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            void caches.open(CACHE).then((cache) => cache.put(request, copy));
-          }
-          return res;
-        }),
-    ),
+    caches.match(request).then((hit) => {
+      const network = fetch(request).then((res) => {
+        if (res.ok) {
+          const copy = res.clone();
+          void caches.open(CACHE).then((cache) => cache.put(request, copy));
+        }
+        return res;
+      });
+      if (!hit) return network;
+      event.waitUntil(network.catch(() => undefined));
+      return hit;
+    }),
   );
 });

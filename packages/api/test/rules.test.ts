@@ -68,6 +68,14 @@ describe("resolveRange", () => {
     expect(resolveRange({}, "2027-09-05", "2027-08-31")).toEqual({ from: "2027-09-05", to: "2027-09-05" });
   });
 
+  it("clips the default end to the range limit when the season runs longer", () => {
+    expect(resolveRange({}, "2026-10-20", "2028-08-31")).toEqual({ from: "2026-10-20", to: "2027-11-24" });
+    expect(resolveRange({ from: "2026-11-01" }, "2026-10-20", "2028-08-31")).toEqual({
+      from: "2026-11-01",
+      to: "2027-12-06",
+    });
+  });
+
   it("rejects bad input", () => {
     expect(codeOf(() => resolveRange({ from: "nope" }, "2026-10-20", "2027-08-31"))).toBe("VALIDATION_ERROR");
     expect(codeOf(() => resolveRange({ from: "2026-11-01", to: "2026-10-01" }, "2026-10-20", "2027-08-31"))).toBe(

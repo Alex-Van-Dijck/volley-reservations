@@ -42,8 +42,11 @@ export function resolveRange(
   seasonEnd: string,
 ): { from: string; to: string } {
   const from = q.from ?? today;
-  const to = q.to ?? (seasonEnd > from ? seasonEnd : from);
-  if (!isValidDate(from) || !isValidDate(to)) {
+  if (!isValidDate(from)) {
+    throw new AppError("VALIDATION_ERROR", "from and to must be dates in YYYY-MM-DD format");
+  }
+  const to = q.to ?? defaultEnd(from, seasonEnd);
+  if (!isValidDate(to)) {
     throw new AppError("VALIDATION_ERROR", "from and to must be dates in YYYY-MM-DD format");
   }
   if (from > to) throw new AppError("VALIDATION_ERROR", "from must not be after to");
@@ -51,6 +54,12 @@ export function resolveRange(
     throw new AppError("VALIDATION_ERROR", `the range is limited to ${MAX_RANGE_DAYS} days`);
   }
   return { from, to };
+}
+
+function defaultEnd(from: string, seasonEnd: string): string {
+  if (seasonEnd <= from) return from;
+  const limit = new Date(Date.parse(`${from}T00:00:00Z`) + MAX_RANGE_DAYS * DAY_MS).toISOString().slice(0, 10);
+  return seasonEnd < limit ? seasonEnd : limit;
 }
 
 export function checkEventInput(i: {
