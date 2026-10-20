@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api";
 import { ManagePage } from "./ManagePage";
-import { captain, makeApi, manager, renderWithApp } from "../test-utils";
+import { captain, makeApi, manager, renderWithApp, schedule } from "../test-utils";
 
 const setup = (user = captain, overrides = {}) =>
   renderWithApp(<ManagePage />, {
@@ -23,6 +23,7 @@ describe("ManagePage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Cancel 2026-10-22" }));
     expect(api.cancelEvent).toHaveBeenCalledWith("e1");
     expect(api.teamSchedule).toHaveBeenCalledTimes(2);
+    expect(api.calendar).toHaveBeenCalledTimes(2);
   });
 
   it("reserves a home game on a free field", async () => {
@@ -67,6 +68,38 @@ describe("ManagePage", () => {
     await userEvent.selectOptions(screen.getByLabelText("New field"), "Field 2");
     await userEvent.click(screen.getByRole("button", { name: "Save 2026-10-22" }));
     expect(api.moveEvent).toHaveBeenCalledWith("e1", { date: "2026-11-05", slotId: 1, fieldId: 2 });
+  });
+
+  it("keeps a move on the game's own date when only the field changes", async () => {
+    const { api } = setup(captain, {
+      teamSchedule: vi.fn().mockResolvedValue({
+        teamId: 1,
+        days: [
+          { date: "2026-10-22", slotId: 1, status: "home", eventId: "e1", fieldId: 1, practiceFieldIds: [2] },
+          { date: "2026-11-05", slotId: 1, status: "home", eventId: "e3", fieldId: 1, practiceFieldIds: [1, 2] },
+        ],
+      }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Move 2026-11-05" }));
+    await userEvent.selectOptions(screen.getByLabelText("New field"), "Field 2");
+    await userEvent.click(screen.getByRole("button", { name: "Save 2026-11-05" }));
+    expect(api.moveEvent).toHaveBeenCalledWith("e3", { date: "2026-11-05", slotId: 1, fieldId: 2 });
+  });
+
+  it("closes an open move form when the manager switches team", async () => {
+    const team2Schedule = {
+      teamId: 2,
+      days: [{ date: "2026-10-22", slotId: 1, status: "training", eventId: null, fieldId: null, practiceFieldIds: [2] }],
+    };
+    const { api } = setup(manager, {
+      teamSchedule: vi.fn((teamId: number) => Promise.resolve(teamId === 2 ? team2Schedule : schedule)),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-22" }));
+    expect(screen.getByLabelText("New date")).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText("Team"), "2");
+    expect(await screen.findByRole("button", { name: "Reserve 2026-10-22" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("New date")).not.toBeInTheDocument();
+    expect(api.moveEvent).not.toHaveBeenCalled();
   });
 
   it("shows a friendly message when the server refuses", async () => {

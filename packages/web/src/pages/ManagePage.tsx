@@ -61,7 +61,7 @@ function ManageTeam({ user }: { user: User }) {
       <ul className="rows">
         {schedule.data.days.map((day) => (
           <DayRow
-            key={`${day.date}|${day.slotId}`}
+            key={`${teamId}|${day.date}|${day.slotId}`}
             day={day}
             slot={slotsByKey.get(`${day.date}|${day.slotId}`)}
             config={cfg}
@@ -94,7 +94,7 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
   const [reserveField, setReserveField] = useState<number | null>(null);
   const chosenField = reserveField ?? reserveFields[0] ?? null;
 
-  const [moveDate, setMoveDate] = useState(days[0]?.date ?? day.date);
+  const [moveDate, setMoveDate] = useState(day.date);
   const [moveField, setMoveField] = useState<number | null>(null);
   const chosenMoveField = moveField ?? day.fieldId ?? config.fields[0]?.id ?? null;
 
