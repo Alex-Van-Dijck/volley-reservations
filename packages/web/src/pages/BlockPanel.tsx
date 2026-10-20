@@ -15,7 +15,7 @@ export function BlockPanel({ days, run }: Props) {
   const blocked = days.flatMap((d) => d.slots.filter((s) => s.blocked).map((s) => ({ date: d.date, slot: s })));
   const [date, setDate] = useState<string | null>(null);
   const [reason, setReason] = useState("");
-  const chosen = date ?? free[0]?.date ?? null;
+  const chosen = date !== null && free.some((d) => d.date === date) ? date : (free[0]?.date ?? null);
 
   return (
     <section className="card">
