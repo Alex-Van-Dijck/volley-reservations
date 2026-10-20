@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+out/
+.vite/
+*.tsbuildinfo
+
+# Generated from packages/contract/openapi.yaml
+packages/*/src/generated/
+
+# Tests and coverage
+coverage/
+playwright-report/
+test-results/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Java port (later)
+target/
+.gradle/
+*.class
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local tooling
+.claude/settings.local.json
+.superpowers/
