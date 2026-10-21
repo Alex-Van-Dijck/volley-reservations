@@ -18,8 +18,12 @@ export function BlockPanel({ days, run }: Props) {
   const chosen = date !== null && free.some((d) => d.date === date) ? date : (free[0]?.date ?? null);
 
   return (
-    <section className="card">
-      <h2>Block a slot</h2>
+    <section className="block-panel">
+      <div>
+        <span className="eyebrow">Manager only</span>
+        <h2>Block a slot</h2>
+        <p>Mark the slot on a date as unavailable for every team.</p>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -32,7 +36,7 @@ export function BlockPanel({ days, run }: Props) {
           });
         }}
       >
-        <label>
+        <label className="field">
           Date
           <select value={chosen ?? ""} onChange={(e) => setDate(e.target.value)}>
             {free.map((d) => (
@@ -42,29 +46,29 @@ export function BlockPanel({ days, run }: Props) {
             ))}
           </select>
         </label>
-        <label>
+        <label className="field">
           Reason
           <input value={reason} onChange={(e) => setReason(e.target.value)} />
         </label>
-        <button type="submit">Block slot</button>
+        <button type="submit" className="danger-button">
+          Block slot
+        </button>
       </form>
-      <ul className="rows">
+      <ul className="blocked-list">
         {blocked.map(({ date: d, slot }) => (
-          <li key={`${d}|${slot.slotId}`} className="row">
-            <div className="row-head">
+          <li key={`${d}|${slot.slotId}`} className="blocked-row">
+            <div>
               <strong>{formatDay(d)}</strong>
-              <span className="muted">{slot.blockReason ?? "Blocked"}</span>
+              <span>{slot.blockReason ?? "Blocked"}</span>
             </div>
-            <div className="row-actions">
-              <button
-                type="button"
-                className="secondary"
-                aria-label={`Unblock ${d}`}
-                onClick={() => void run(() => api.unblockSlot(d, slot.slotId))}
-              >
-                Unblock
-              </button>
-            </div>
+            <button
+              type="button"
+              className="outline-button small"
+              aria-label={`Unblock ${d}`}
+              onClick={() => void run(() => api.unblockSlot(d, slot.slotId))}
+            >
+              Unblock
+            </button>
           </li>
         ))}
       </ul>

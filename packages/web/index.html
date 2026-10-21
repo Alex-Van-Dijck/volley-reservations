@@ -3,10 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b5fff" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <title>Volley reservations</title>
+    <script>
+      (function () {
+        var dark = null;
+        try {
+          var saved = localStorage.getItem("volley-theme");
+          if (saved === "dark" || saved === "light") dark = saved === "dark";
+        } catch (e) {}
+        if (dark === null) {
+          dark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        }
+        if (dark) document.documentElement.classList.add("dark");
+        window.addEventListener("load", function () {
+          document.documentElement.classList.add("theme-ready");
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
