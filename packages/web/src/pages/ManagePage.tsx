@@ -55,7 +55,6 @@ function ManageTeam({ user }: { user: User }) {
       <PageIntro
         eyebrow="Reservations"
         title="Manage"
-        copy="Reserve, move or cancel games. Changes are visible club-wide."
         action={user.role === "manager" ? <span className="manager-pill">Manager access</span> : undefined}
       />
       {user.role === "manager" && (

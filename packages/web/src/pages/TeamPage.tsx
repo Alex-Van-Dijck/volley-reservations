@@ -29,7 +29,6 @@ export function TeamPage() {
       <PageIntro
         eyebrow="Teams"
         title="Team schedule"
-        copy="Choose a team to see its games and training at a glance."
       />
       <label className="team-picker">
         <span>Team</span>
