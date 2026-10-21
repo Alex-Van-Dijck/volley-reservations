@@ -1,38 +1,36 @@
 import { css } from "styled-system/css";
 import type { Team } from "../types";
+import { Eyebrow } from "./Eyebrow";
 import { Icon } from "./Icon";
 
-type Props = { teams: Team[]; value: number | null; onChange: (teamId: number) => void };
+type Props = {
+  teams: Team[];
+  value: number | null;
+  onChange: (teamId: number) => void;
+};
 
 const picker = css({
-  bg: "ink",
-  color: "paper",
-  p: { base: "20px", mdDown: "16px" },
-  display: "grid",
-  gridTemplateColumns: { base: "100px 1fr", mdDown: "1fr" },
-  alignItems: "center",
-  gap: { base: "18px", mdDown: "8px" },
-  fontWeight: 700,
-  mb: "24px",
+  display: "block",
+  width: "100%",
+  md: { maxWidth: "320px", alignSelf: "flex-start" },
 });
 
 const selectWrap = css({
   position: "relative",
   "& select": {
     width: "100%",
-    height: "48px",
     appearance: "none",
-    border: 0,
-    bg: "paper",
-    color: "ink",
     pr: "44px",
-    pl: "15px",
+    fontSize: "16px",
     fontWeight: 700,
+    cursor: "pointer",
+    _hover: { borderColor: "ink" },
   },
   "& svg": {
     position: "absolute",
     right: "14px",
-    top: "15px",
+    top: "50%",
+    transform: "translateY(-50%)",
     pointerEvents: "none",
     color: "ink",
   },
@@ -41,9 +39,12 @@ const selectWrap = css({
 export function TeamPicker({ teams, value, onChange }: Props) {
   return (
     <label className={picker}>
-      <span>Team</span>
       <div className={selectWrap}>
-        <select value={value ?? ""} onChange={(e) => onChange(Number(e.target.value))}>
+        <select
+          aria-label="Team"
+          value={value ?? ""}
+          onChange={(e) => onChange(Number(e.target.value))}
+        >
           {teams.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}

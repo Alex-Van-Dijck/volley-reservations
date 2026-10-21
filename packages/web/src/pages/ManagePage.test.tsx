@@ -65,6 +65,10 @@ describe("ManagePage", () => {
           { date: "2026-10-22", slotId: 1, status: "home", eventId: "e1", fieldId: 1, practiceFieldIds: [2] },
           { date: "2026-11-05", slotId: 1, status: "home", eventId: "e3", fieldId: 1, practiceFieldIds: [1, 2] },
         ],
+        openSlots: [
+          { date: "2026-10-22", slotId: 1, fieldIds: [1, 2] },
+          { date: "2026-11-05", slotId: 1, fieldIds: [1, 2] },
+        ],
       }),
     });
     await userEvent.click(await screen.findByRole("button", { name: "Move 2026-11-05" }));
@@ -77,6 +81,7 @@ describe("ManagePage", () => {
     const team2Schedule = {
       teamId: 2,
       days: [{ date: "2026-10-22", slotId: 1, status: "training", eventId: null, fieldId: null, practiceFieldIds: [2] }],
+      openSlots: [{ date: "2026-10-22", slotId: 1, fieldIds: [2] }],
     };
     const { api } = setup(manager, {
       teamSchedule: vi.fn((teamId: number) => Promise.resolve(teamId === 2 ? team2Schedule : schedule)),
@@ -96,14 +101,71 @@ describe("ManagePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("That field is already taken.");
   });
 
-  it("only offers fields that are free on the target date when moving", async () => {
+  it("only offers the dates and fields the server reports as open when moving", async () => {
+    setup(captain, {
+      teamSchedule: vi.fn().mockResolvedValue({
+        ...schedule,
+        openSlots: [
+          { date: "2026-10-22", slotId: 1, fieldIds: [1] },
+          { date: "2026-11-05", slotId: 1, fieldIds: [2] },
+        ],
+      }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-22" }));
+    const dates = screen.getByLabelText("New date");
+    expect(within(dates).getAllByRole("option").map((o) => o.textContent)).toEqual(["Thu 5 Nov"]);
+    expect(within(screen.getByLabelText("New field")).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Field 2",
+    ]);
+  });
+
+  it("does not offer dates where the team already has a game when moving", async () => {
+    setup(captain, {
+      teamSchedule: vi.fn().mockResolvedValue({
+        teamId: 1,
+        days: [
+          { date: "2026-10-22", slotId: 1, status: "home", eventId: "e1", fieldId: 1, practiceFieldIds: [2] },
+          { date: "2026-10-29", slotId: 1, status: "home", eventId: "e3", fieldId: 1, practiceFieldIds: [2] },
+          { date: "2026-11-05", slotId: 1, status: "training", eventId: null, fieldId: null, practiceFieldIds: [1, 2] },
+        ],
+        openSlots: [
+          { date: "2026-10-22", slotId: 1, fieldIds: [1, 2] },
+          { date: "2026-10-29", slotId: 1, fieldIds: [1, 2] },
+          { date: "2026-11-05", slotId: 1, fieldIds: [1, 2] },
+        ],
+      }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-29" }));
+    const dates = screen.getByLabelText("New date");
+    expect(within(dates).getAllByRole("option").map((o) => o.textContent)).toEqual(["Thu 29 Oct", "Thu 5 Nov"]);
+    await userEvent.selectOptions(dates, "Thu 5 Nov");
+    expect(within(screen.getByLabelText("New field")).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Field 1",
+      "Field 2",
+    ]);
+  });
+
+  it("does not offer the game's current field on its current date when moving", async () => {
     setup();
     await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-22" }));
-    const field = screen.getByLabelText("New field");
-    expect(within(field).getAllByRole("option").map((o) => o.textContent)).toEqual(["Field 1", "Field 2"]);
-    await userEvent.selectOptions(screen.getByLabelText("New date"), "Thu 29 Oct");
-    expect(screen.getByLabelText("New field")).toHaveDisplayValue("No free field");
-    expect(screen.getByRole("button", { name: "Save 2026-10-22" })).toBeDisabled();
+    const dates = screen.getByLabelText("New date");
+    expect(within(dates).getAllByRole("option").map((o) => o.textContent)).toEqual(["Thu 22 Oct", "Thu 5 Nov"]);
+    expect(within(screen.getByLabelText("New field")).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Field 2",
+    ]);
+    await userEvent.selectOptions(dates, "Thu 5 Nov");
+    expect(within(screen.getByLabelText("New field")).getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Field 1",
+      "Field 2",
+    ]);
+  });
+
+  it("closes the move form without moving when cancelled", async () => {
+    const { api } = setup();
+    await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-22" }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel move 2026-10-22" }));
+    expect(screen.queryByLabelText("New date")).not.toBeInTheDocument();
+    expect(api.moveEvent).not.toHaveBeenCalled();
   });
 
   it("ignores a second click while a request is running", async () => {

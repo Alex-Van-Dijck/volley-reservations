@@ -25,6 +25,9 @@ export type TeamDay = {
   practiceFieldIds: number[];
 };
 
+export type OpenSlot = { date: string; slotId: number; fieldIds: number[] };
+export type TeamSchedule = { teamId: number; days: TeamDay[]; openSlots: OpenSlot[] };
+
 export type EventView = {
   id: string;
   teamId: number;

@@ -95,8 +95,9 @@ export function readRoutes(app: App, deps: Deps): void {
     const team = Number.isInteger(id) ? await prisma.team.findUnique({ where: { id } }) : null;
     if (!team) throw new AppError("NOT_FOUND", "Team not found");
     const { settings, from, to } = await rangeFor(req.query);
-    if (from > settings.seasonEnd) return { teamId: id, days: [] };
-    const days = (await loadCells(from, to)).map((c) => {
+    if (from > settings.seasonEnd) return { teamId: id, days: [], openSlots: [] };
+    const cells = await loadCells(from, to);
+    const days = cells.map((c) => {
       const mine = c.events.find((e) => e.teamId === id) ?? null;
       return {
         date: c.date,
@@ -107,6 +108,13 @@ export function readRoutes(app: App, deps: Deps): void {
         practiceFieldIds: c.practiceFieldIds,
       };
     });
-    return { teamId: id, days };
+    const openSlots = days
+      .map((d) => ({
+        date: d.date,
+        slotId: d.slotId,
+        fieldIds: [...new Set([...(d.fieldId === null ? [] : [d.fieldId]), ...d.practiceFieldIds])].sort((a, b) => a - b),
+      }))
+      .filter((s) => s.fieldIds.length > 0);
+    return { teamId: id, days, openSlots };
   });
 }

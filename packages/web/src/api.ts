@@ -1,4 +1,4 @@
-import type { CalendarDay, Config, EventView, NewEventInput, TeamDay, User } from "./types";
+import type { CalendarDay, Config, EventView, NewEventInput, TeamSchedule, User } from "./types";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -14,7 +14,7 @@ export class ApiError extends Error {
 export type Api = {
   config(): Promise<Config>;
   calendar(range?: { from?: string; to?: string }): Promise<{ days: CalendarDay[] }>;
-  teamSchedule(teamId: number, range?: { from?: string; to?: string }): Promise<{ teamId: number; days: TeamDay[] }>;
+  teamSchedule(teamId: number, range?: { from?: string; to?: string }): Promise<TeamSchedule>;
   login(username: string, password: string): Promise<User>;
   logout(): Promise<void>;
   me(): Promise<User | null>;

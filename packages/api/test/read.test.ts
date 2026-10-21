@@ -109,6 +109,25 @@ describe("GET /api/teams/:id/schedule", () => {
     expect(fourth.days[0].practiceFieldIds).toEqual([w.fields[1]!.id]);
   });
 
+  it("lists the slot dates and fields a team can still move a home game to", async () => {
+    const [f1, f2] = [w.fields[0]!.id, w.fields[1]!.id];
+    await book(w.teams[0]!.id, "2026-10-22", "home", f1);
+    await book(w.teams[1]!.id, "2026-10-22", "home", f2);
+    await book(w.teams[1]!.id, "2026-10-29", "home", f1);
+    await book(w.teams[2]!.id, "2026-10-29", "home", f2);
+    await prisma.block.create({ data: { date: toDate("2026-11-05"), slotId: w.slot.id } });
+    const url = (id: number) => `/api/teams/${id}/schedule?from=2026-10-22&to=2026-11-12`;
+
+    const mine = (await app.inject({ url: url(w.teams[0]!.id) })).json();
+    expect(mine.openSlots).toEqual([
+      { date: "2026-10-22", slotId: w.slot.id, fieldIds: [f1] },
+      { date: "2026-11-12", slotId: w.slot.id, fieldIds: [f1, f2] },
+    ]);
+
+    const other = (await app.inject({ url: url(w.teams[3]!.id) })).json();
+    expect(other.openSlots).toEqual([{ date: "2026-11-12", slotId: w.slot.id, fieldIds: [f1, f2] }]);
+  });
+
   it("clips the range to the season end", async () => {
     const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-05-01&to=2027-06-30` });
     expect(res.statusCode).toBe(200);
@@ -123,7 +142,7 @@ describe("GET /api/teams/:id/schedule", () => {
   it("returns no days when the range starts after the season end", async () => {
     const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-06-01&to=2027-06-30` });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ teamId: w.teams[0]!.id, days: [] });
+    expect(res.json()).toEqual({ teamId: w.teams[0]!.id, days: [], openSlots: [] });
   });
 
   it("returns 404 for an unknown team", async () => {

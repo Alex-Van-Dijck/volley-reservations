@@ -5,7 +5,7 @@ import { vi } from "vitest";
 import type { Api } from "./api";
 import { ApiProvider } from "./api-context";
 import { AuthProvider } from "./auth-context";
-import type { CalendarDay, Config, TeamDay, User } from "./types";
+import type { CalendarDay, Config, TeamSchedule, User } from "./types";
 
 export const config: Config = {
   teams: [1, 2, 3, 4].map((id) => ({ id, name: `Team ${id}` })),
@@ -49,12 +49,16 @@ export const calendar: { days: CalendarDay[] } = {
   ],
 };
 
-export const schedule: { teamId: number; days: TeamDay[] } = {
+export const schedule: TeamSchedule = {
   teamId: 1,
   days: [
     { date: "2026-10-22", slotId: 1, status: "home", eventId: "e1", fieldId: 1, practiceFieldIds: [2] },
     { date: "2026-10-29", slotId: 1, status: "unavailable", eventId: null, fieldId: null, practiceFieldIds: [] },
     { date: "2026-11-05", slotId: 1, status: "training", eventId: null, fieldId: null, practiceFieldIds: [1, 2] },
+  ],
+  openSlots: [
+    { date: "2026-10-22", slotId: 1, fieldIds: [1, 2] },
+    { date: "2026-11-05", slotId: 1, fieldIds: [1, 2] },
   ],
 };
 

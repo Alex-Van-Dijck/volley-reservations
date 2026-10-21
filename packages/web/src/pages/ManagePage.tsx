@@ -18,8 +18,9 @@ const managerPill = css({
   textStyle: "pill",
   py: "8px",
   px: "12px",
-  mdDown: { display: "inline-block", mt: "18px" },
 });
+
+const pickerSpacing = css({ mb: "24px" });
 
 const block = css({ layerStyle: "card" });
 
@@ -61,8 +62,8 @@ function ManageTeam({ user }: { user: User }) {
   }
 
   const cfg = config.data;
-  const days = schedule.data.days;
-  const cells = new Map(calendar.data.days.flatMap((d) => d.slots.map((s) => [`${d.date}|${s.slotId}`, s] as const)));
+  const { days, openSlots } = schedule.data;
+  const bookedDates = new Set(days.filter((d) => d.eventId !== null).map((d) => d.date));
 
   return (
     <section>
@@ -71,7 +72,11 @@ function ManageTeam({ user }: { user: User }) {
         title="Manage"
         action={isManager ? <span className={managerPill}>Manager access</span> : undefined}
       />
-      {isManager && <TeamPicker teams={cfg.teams} value={teamId} onChange={setPicked} />}
+      {isManager && (
+        <div className={pickerSpacing}>
+          <TeamPicker teams={cfg.teams} value={teamId} onChange={setPicked} />
+        </div>
+      )}
       {action.error && <ErrorBanner message={action.error} />}
       <div className={block}>
         <div className={blockHead}>
@@ -85,8 +90,12 @@ function ManageTeam({ user }: { user: User }) {
               day={day}
               teamId={teamId}
               config={cfg}
-              dates={days.filter((d) => d.slotId === day.slotId).map((d) => d.date)}
-              cell={(date) => cells.get(`${date}|${day.slotId}`)}
+              dates={days
+                .filter((d) => d.slotId === day.slotId && (d.date === day.date || d.eventId === null))
+                .map((d) => d.date)}
+              openSlots={openSlots.filter(
+                (s) => s.slotId === day.slotId && (s.date === day.date || !bookedDates.has(s.date)),
+              )}
               run={action.run}
               busy={action.busy}
             />

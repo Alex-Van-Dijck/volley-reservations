@@ -5,7 +5,6 @@ import { fieldName, formatDay, slotTime, teamName } from "../format";
 import { useLoad } from "../hooks";
 import { DateBlock } from "../ui/DateBlock";
 import { ErrorBanner } from "../ui/ErrorBanner";
-import { Eyebrow } from "../ui/Eyebrow";
 import { PageIntro } from "../ui/PageIntro";
 import { StatusBadge } from "../ui/StatusBadge";
 import { TeamPicker } from "../ui/TeamPicker";
@@ -51,13 +50,18 @@ export function TeamPage() {
   const { teamId: param } = useParams();
   const config = useLoad(() => api.config(), [api]);
   const teams = config.data?.teams ?? [];
-  const teamId = teams.find((t) => String(t.id) === param)?.id ?? teams[0]?.id ?? null;
-  const schedule = useLoad(() => (teamId === null ? Promise.resolve(null) : api.teamSchedule(teamId)), [api, teamId]);
+  const teamId =
+    teams.find((t) => String(t.id) === param)?.id ?? teams[0]?.id ?? null;
+  const schedule = useLoad(
+    () => (teamId === null ? Promise.resolve(null) : api.teamSchedule(teamId)),
+    [api, teamId],
+  );
 
   const failure = config.error ?? schedule.error;
   if (failure) return <ErrorBanner message={failure} />;
   if (config.data && teamId === null) return <p>No teams yet.</p>;
-  if (!config.data || teamId === null || schedule.data?.teamId !== teamId) return <p>Loading...</p>;
+  if (!config.data || teamId === null || schedule.data?.teamId !== teamId)
+    return <p>Loading...</p>;
 
   const cfg = config.data;
   const days = schedule.data.days;
@@ -65,15 +69,19 @@ export function TeamPage() {
 
   return (
     <section>
-      <PageIntro eyebrow="Teams" title="Team schedule" />
-      <TeamPicker teams={cfg.teams} value={teamId} onChange={(id) => navigate(`/team/${id}`)} />
+      <PageIntro
+        title="Team schedule"
+        action={
+          <TeamPicker
+            teams={cfg.teams}
+            value={teamId}
+            onChange={(id) => navigate(`/team/${id}`)}
+          />
+        }
+      />
       <div className={section}>
         <div className={heading}>
-          <div>
-            <Eyebrow>Season</Eyebrow>
-            <h2>{teamName(cfg, teamId)}</h2>
-          </div>
-          <span className={countPill}>{`${days.length} dates`}</span>
+          <h2>{teamName(cfg, teamId)}</h2>
         </div>
         <ul className={list}>
           {days.map((d) => (
@@ -81,9 +89,19 @@ export function TeamPage() {
               <DateBlock date={d.date} />
               <div className={copy}>
                 <StatusBadge status={d.status} compact />
-                <h3>{showTime ? `${formatDay(d.date)}, ${slotTime(cfg, d.slotId)}` : formatDay(d.date)}</h3>
+                <h3>
+                  {showTime
+                    ? `${formatDay(d.date)}, ${slotTime(cfg, d.slotId)}`
+                    : formatDay(d.date)}
+                </h3>
                 {d.fieldId !== null && <p>{fieldName(cfg, d.fieldId)}</p>}
-                {d.status === "training" && <p>{d.practiceFieldIds.map((id) => fieldName(cfg, id)).join(", ")}</p>}
+                {d.status === "training" && (
+                  <p>
+                    {d.practiceFieldIds
+                      .map((id) => fieldName(cfg, id))
+                      .join(", ")}
+                  </p>
+                )}
               </div>
             </li>
           ))}
