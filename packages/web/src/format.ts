@@ -9,7 +9,15 @@ export function formatDay(date: string): string {
   return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
 
-export const formatSlot = (slot: Slot): string => `${slot.start}-${slot.end}`;
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+export const monthName = (monthKey: string): string => MONTH_NAMES[Number(monthKey.slice(5, 7)) - 1] ?? "";
+export const formatMonth = (monthKey: string): string => `${monthName(monthKey)} ${monthKey.slice(0, 4)}`;
+
+export const formatSlot =(slot: Slot): string => `${slot.start}-${slot.end}`;
 
 const STATUS: Record<TeamStatus, string> = {
   home: "Home game",

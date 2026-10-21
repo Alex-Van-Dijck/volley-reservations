@@ -277,12 +277,10 @@ function MobileNav({
 function PageIntro({
   eyebrow,
   title,
-  copy,
   action,
 }: {
   eyebrow: string
   title: string
-  copy: string
   action?: ReactNode
 }) {
   return (

@@ -57,7 +57,7 @@ jobs:
       DATABASE_URL: postgresql://volley:volley@localhost:5432/volley
       SEED_MANAGER_PASSWORD: e2e-manager
       SEED_CAPTAIN_PASSWORD: e2e-captain
-      E2E_USER: captain1
+      E2E_USER: koen
       E2E_PASSWORD: e2e-captain
     steps:
       - uses: actions/checkout@v4

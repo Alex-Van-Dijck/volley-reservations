@@ -13,38 +13,74 @@ export async function seed(
   prisma: PrismaClient,
   opts: { managerPassword?: string; captainPassword?: string } = {},
 ): Promise<void> {
-  const managerPassword = opts.managerPassword ?? process.env.SEED_MANAGER_PASSWORD ?? "change-me";
-  const captainPassword = opts.captainPassword ?? process.env.SEED_CAPTAIN_PASSWORD ?? "change-me";
+  const managerPassword =
+    opts.managerPassword ?? process.env.SEED_MANAGER_PASSWORD ?? "change-me";
+  const captainPassword =
+    opts.captainPassword ?? process.env.SEED_CAPTAIN_PASSWORD ?? "change-me";
 
+  const teamSeeds = [
+    { name: "Overvoc H1", captain: "koen" },
+    { name: "Overvoc H2", captain: "wilfried" },
+    { name: "Overvoc H3", captain: "luc" },
+    { name: "Overvoc D", captain: "ronny" },
+  ];
   const teams = [];
-  for (let i = 1; i <= 4; i++) {
-    teams.push(await prisma.team.upsert({ where: { name: `Team ${i}` }, update: {}, create: { name: `Team ${i}` } }));
+  for (const { name } of teamSeeds) {
+    teams.push(
+      await prisma.team.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      }),
+    );
   }
   const fields = [
-    await prisma.field.upsert({ where: { name: "Field 1" }, update: {}, create: { name: "Field 1", size: "big" } }),
-    await prisma.field.upsert({ where: { name: "Field 2" }, update: {}, create: { name: "Field 2", size: "small" } }),
+    await prisma.field.upsert({
+      where: { name: "Field 1" },
+      update: {},
+      create: { name: "Field 1", size: "big" },
+    }),
+    await prisma.field.upsert({
+      where: { name: "Field 2" },
+      update: {},
+      create: { name: "Field 2", size: "small" },
+    }),
   ];
 
   if ((await prisma.slot.count()) === 0) {
-    await prisma.slot.create({ data: { weekday: 4, start: time("20:00"), end: time("22:00") } });
+    await prisma.slot.create({
+      data: { weekday: 4, start: time("20:00"), end: time("22:00") },
+    });
   }
   const slot = await prisma.slot.findFirstOrThrow({ where: { weekday: 4 } });
 
-  for (const [key, value] of [["season_end", "2027-08-31"], ["timezone", "Europe/Brussels"]] as const) {
-    await prisma.setting.upsert({ where: { key }, update: {}, create: { key, value } });
+  for (const [key, value] of [
+    ["season_end", "2027-08-31"],
+    ["timezone", "Europe/Brussels"],
+  ] as const) {
+    await prisma.setting.upsert({
+      where: { key },
+      update: {},
+      create: { key, value },
+    });
   }
 
   await prisma.user.upsert({
     where: { username: "manager" },
     update: {},
-    create: { username: "manager", role: "manager", passwordHash: await hashPassword(managerPassword) },
+    create: {
+      username: "manager",
+      role: "manager",
+      passwordHash: await hashPassword(managerPassword),
+    },
   });
   for (const [i, team] of teams.entries()) {
+    const username = at(teamSeeds, i).captain;
     await prisma.user.upsert({
-      where: { username: `captain${i + 1}` },
+      where: { username },
       update: {},
       create: {
-        username: `captain${i + 1}`,
+        username,
         role: "captain",
         teamId: team.id,
         passwordHash: await hashPassword(captainPassword),
@@ -52,20 +88,36 @@ export async function seed(
     });
   }
 
-  const manager = await prisma.user.findUniqueOrThrow({ where: { username: "manager" } });
+  const manager = await prisma.user.findUniqueOrThrow({
+    where: { username: "manager" },
+  });
   const roundRobin: [number, number][][] = [
-    [[0, 1], [2, 3]],
-    [[0, 2], [1, 3]],
-    [[0, 3], [1, 2]],
+    [
+      [0, 1],
+      [2, 3],
+    ],
+    [
+      [0, 2],
+      [1, 3],
+    ],
+    [
+      [0, 3],
+      [1, 2],
+    ],
   ];
   const firstThursday = Date.UTC(2026, 9, 22);
   for (let week = 0; week < 6; week++) {
     const date = new Date(firstThursday + week * 7 * 24 * 60 * 60 * 1000);
-    for (const [matchIndex, [homeIndex, awayIndex]] of at(roundRobin, week % roundRobin.length).entries()) {
+    for (const [matchIndex, [homeIndex, awayIndex]] of at(
+      roundRobin,
+      week % roundRobin.length,
+    ).entries()) {
       const home = at(teams, homeIndex);
       const away = at(teams, awayIndex);
       await prisma.event.upsert({
-        where: { teamId_date_slotId: { teamId: home.id, date, slotId: slot.id } },
+        where: {
+          teamId_date_slotId: { teamId: home.id, date, slotId: slot.id },
+        },
         update: {},
         create: {
           teamId: home.id,
@@ -77,7 +129,9 @@ export async function seed(
         },
       });
       await prisma.event.upsert({
-        where: { teamId_date_slotId: { teamId: away.id, date, slotId: slot.id } },
+        where: {
+          teamId_date_slotId: { teamId: away.id, date, slotId: slot.id },
+        },
         update: {},
         create: {
           teamId: away.id,

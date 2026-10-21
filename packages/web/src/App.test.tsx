@@ -12,7 +12,7 @@ afterEach(() => {
 describe("App shell", () => {
   it("offers sign in and hides manage when signed out", async () => {
     renderWithApp(<App />);
-    expect(await screen.findByRole("heading", { name: "Club calendar" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "October 2026" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Sign in" }).length).toBeGreaterThan(0);
     expect(screen.queryByRole("link", { name: "Manage" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
