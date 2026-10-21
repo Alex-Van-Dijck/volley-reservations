@@ -12,7 +12,8 @@
     "start": "node dist/main.js",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/run-seed.ts"
+    "db:seed": "tsx prisma/run-seed.ts",
+    "db:reset": "prisma migrate reset && prisma db seed"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",

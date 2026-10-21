@@ -5,10 +5,9 @@ import { renderWithApp } from "../test-utils";
 import { CalendarPage } from "./CalendarPage";
 
 describe("CalendarPage layout", () => {
-  it("shows the status legend and the month heading", async () => {
+  it("shows the month heading", async () => {
     renderWithApp(<CalendarPage />);
     expect(await screen.findByRole("heading", { level: 1, name: "October 2026" })).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Status legend" })).toBeInTheDocument();
   });
 
   it("marks a blocked day in the selected panel", async () => {

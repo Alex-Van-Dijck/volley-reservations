@@ -140,15 +140,6 @@ export const dot = defineRecipe({
     borderRadius: "50%",
     bg: "currentColor",
   },
-  variants: {
-    status: {
-      home: {},
-      training: {},
-      unavailable: { bg: "crimson" },
-      no_training: { bg: "crimson" },
-      away: { bg: "transparent", border: "1.5px solid", borderColor: "currentColor" },
-    },
-  },
 });
 
 export const fieldSection = defineSlotRecipe({

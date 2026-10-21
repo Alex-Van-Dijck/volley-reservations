@@ -7,7 +7,6 @@ import { useLoad } from "../hooks";
 import type { CalendarDay, CalendarSlot, Config, TeamStatus } from "../types";
 import { DateBlock } from "../ui/DateBlock";
 import { ErrorBanner } from "../ui/ErrorBanner";
-import { Legend } from "../ui/Legend";
 import { PageIntro } from "../ui/PageIntro";
 import { StatusBadge, StatusMark } from "../ui/StatusBadge";
 
@@ -266,7 +265,7 @@ export function CalendarPage() {
                 onClick={() => setPicked(date)}
               >
                 <span>{dayNumber}</span>
-                <i className={dot({ status })} />
+                {status !== "no_training" && <i className={dot()} />}
               </button>
             );
           })}
@@ -291,7 +290,6 @@ export function CalendarPage() {
           </div>
         </section>
       </div>
-      <Legend />
     </section>
   );
 }

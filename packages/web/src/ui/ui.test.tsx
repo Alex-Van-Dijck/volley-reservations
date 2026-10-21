@@ -1,8 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DateBlock } from "./DateBlock";
 import { ErrorBanner } from "./ErrorBanner";
-import { Legend } from "./Legend";
 import { PageIntro } from "./PageIntro";
 import { StatusBadge, StatusMark } from "./StatusBadge";
 
@@ -50,15 +49,5 @@ describe("PageIntro", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Team schedule" })).toBeInTheDocument();
     expect(screen.getByText("Teams")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Go" })).toBeInTheDocument();
-  });
-});
-
-describe("Legend", () => {
-  it("lists all five statuses", () => {
-    render(<Legend />);
-    const group = screen.getByRole("group", { name: "Status legend" });
-    for (const label of ["Home game", "Away game", "Unavailable", "Training", "No training"]) {
-      expect(within(group).getByText(label)).toBeInTheDocument();
-    }
   });
 });
