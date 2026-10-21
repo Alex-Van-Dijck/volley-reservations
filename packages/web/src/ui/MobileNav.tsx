@@ -19,7 +19,7 @@ export function MobileNav({ signedIn }: { signedIn: boolean }) {
         </NavLink>
       ) : (
         <NavLink to="/login">
-          <Icon name="users" size={20} />
+          <Icon name="login" size={20} />
           <span>Sign in</span>
         </NavLink>
       )}
