@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { conflictFromUnique, toDate } from "../src/db.js";
+import { toDate } from "../src/dates.js";
+import { conflictFromUnique } from "../src/db.js";
 import { AppError } from "../src/errors.js";
 import { clearBookings, testPrisma } from "./db.js";
 import { seedWorld, type World } from "./helpers.js";

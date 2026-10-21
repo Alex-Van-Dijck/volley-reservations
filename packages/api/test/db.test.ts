@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmtDate, fmtTime, toDate } from "../src/db.js";
+import { fmtDate, fmtTime, toDate } from "../src/dates.js";
 
 describe("date mapper", () => {
   it.each(["2026-03-29", "2026-10-25", "2026-12-31", "2027-01-01"])("round-trips the date %s", (date) => {

@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { App } from "../src/app.js";
-import { lockCells, toDate, transact } from "../src/db.js";
+import { toDate } from "../src/dates.js";
+import { lockCells, transact } from "../src/db.js";
 import { clearBookings, testPrisma } from "./db.js";
 import { buildTestApp, loginAs, PASSWORDS, seedWorld, type World } from "./helpers.js";
 

@@ -1,7 +1,8 @@
 import type { FastifyRequest } from "fastify";
 import type { App } from "../app.js";
 import { requireActor } from "../auth.js";
-import { lockCells, toDate, transact, type Deps } from "../db.js";
+import { toDate } from "../dates.js";
+import { lockCells, transact, type Deps } from "../db.js";
 import { AppError } from "../errors.js";
 import { isoWeekday, isValidDate } from "../rules.js";
 

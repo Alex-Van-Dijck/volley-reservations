@@ -1,5 +1,6 @@
 import type { App } from "../app.js";
-import { fmtDate, fmtTime, loadSettings, toDate, type Deps } from "../db.js";
+import { fmtDate, fmtTime, toDate } from "../dates.js";
+import { loadSettings, type Deps } from "../db.js";
 import { AppError } from "../errors.js";
 import { datesWithWeekday, practiceFieldIds, resolveRange, teamStatus, todayIn } from "../rules.js";
 

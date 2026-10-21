@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { App } from "../src/app.js";
-import { toDate } from "../src/db.js";
+import { toDate } from "../src/dates.js";
 import { clearBookings, testPrisma } from "./db.js";
 import { buildTestApp, seedWorld, type World } from "./helpers.js";
 

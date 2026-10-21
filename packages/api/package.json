@@ -15,10 +15,12 @@
     "db:seed": "tsx prisma/run-seed.ts"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.5.0",
     "@fastify/cookie": "^11.0.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "argon2": "^0.41.0",
+    "date-fns": "^4.4.0",
     "dotenv": "^16.4.0",
     "fastify": "^5.0.0",
     "pg": "^8.13.0"

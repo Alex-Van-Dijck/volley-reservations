@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "./generated/prisma/client.js";
 import { AppError } from "./errors.js";
+import { epochDay } from "./dates.js";
 
 export { Prisma, PrismaClient };
 export type Tx = Prisma.TransactionClient;
@@ -16,10 +17,6 @@ export function createPrisma(url: string): PrismaClient {
   return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
 }
 
-export const toDate = (s: string): Date => new Date(`${s}T00:00:00Z`);
-export const fmtDate = (d: Date): string => d.toISOString().slice(0, 10);
-export const fmtTime = (d: Date): string => d.toISOString().slice(11, 16);
-
 export async function loadSettings(prisma: PrismaClient): Promise<{ seasonEnd: string; timezone: string }> {
   const rows = await prisma.setting.findMany();
   const map = new Map(rows.map((r) => [r.key, r.value]));
@@ -28,8 +25,6 @@ export async function loadSettings(prisma: PrismaClient): Promise<{ seasonEnd: s
   if (!seasonEnd || !timezone) throw new Error("Settings season_end and timezone are missing, run the seed");
   return { seasonEnd, timezone };
 }
-
-const epochDay = (date: string): number => Math.floor(Date.parse(`${date}T00:00:00Z`) / 86_400_000);
 
 export async function lockCells(tx: Tx, cells: { date: string; slotId: number }[]): Promise<void> {
   const distinct = new Map(cells.map((c) => [`${c.date}|${c.slotId}`, c]));
