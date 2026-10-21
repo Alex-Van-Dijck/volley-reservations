@@ -14,8 +14,8 @@ describe("useTheme", () => {
     expect(document.documentElement).not.toHaveClass("dark");
   });
 
-  it("starts dark when dark is stored", () => {
-    localStorage.setItem("volley-theme", "dark");
+  it("starts from the class the boot script set", () => {
+    document.documentElement.classList.add("dark");
     const { result } = renderHook(() => useTheme());
     expect(result.current.dark).toBe(true);
     expect(document.documentElement).toHaveClass("dark");

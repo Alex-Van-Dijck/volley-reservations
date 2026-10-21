@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useApi } from "../api-context";
-import { formatDay, formatMonth, formatSlot, monthName, statusLabel } from "../format";
+import { fieldName, formatDay, formatMonth, monthName, slotTime, statusClass, statusLabel, teamName } from "../format";
 import { useLoad } from "../hooks";
-import type { CalendarDay, CalendarSlot, TeamStatus } from "../types";
+import type { CalendarDay, CalendarSlot, Config, TeamStatus } from "../types";
 import { DateBlock } from "../ui/DateBlock";
 import { ErrorBanner } from "../ui/ErrorBanner";
 import { Legend } from "../ui/Legend";
@@ -19,11 +19,7 @@ function dayStatus(day: CalendarDay): TeamStatus {
   return "no_training";
 }
 
-const statusSuffix = (status: TeamStatus) => status.replace("_", "-");
-
-type Lookup = { team: (id: number) => string; field: (id: number) => string };
-
-function SlotLines({ slot, lookup }: { slot: CalendarSlot; lookup: Lookup }) {
+function SlotLines({ slot, config }: { slot: CalendarSlot; config: Config }) {
   return (
     <>
       {slot.blocked && (
@@ -35,13 +31,13 @@ function SlotLines({ slot, lookup }: { slot: CalendarSlot; lookup: Lookup }) {
       {slot.homeGames.map((g) => (
         <div key={g.eventId} className="slot-line">
           <StatusMark status="home" />
-          <p>{`${lookup.team(g.teamId)} on ${lookup.field(g.fieldId)}`}</p>
+          <p>{`${teamName(config, g.teamId)} on ${fieldName(config, g.fieldId)}`}</p>
         </div>
       ))}
       {slot.awayGames.map((g) => (
         <div key={g.eventId} className="slot-line">
           <StatusMark status="away" />
-          <p>{`${lookup.team(g.teamId)} away`}</p>
+          <p>{`${teamName(config, g.teamId)} away`}</p>
         </div>
       ))}
       {!slot.blocked && (
@@ -49,7 +45,7 @@ function SlotLines({ slot, lookup }: { slot: CalendarSlot; lookup: Lookup }) {
           <StatusMark status={slot.practiceFieldIds.length > 0 ? "training" : "no_training"} />
           <p>
             {slot.practiceFieldIds.length > 0
-              ? `Free to practice: ${slot.practiceFieldIds.map(lookup.field).join(", ")}`
+              ? `Free to practice: ${slot.practiceFieldIds.map((id) => fieldName(config, id)).join(", ")}`
               : "No free field"}
           </p>
         </div>
@@ -85,10 +81,6 @@ export function CalendarPage() {
   const firstDay = days[0];
   if (!firstDay) return <p>No days to show.</p>;
 
-  const lookup: Lookup = {
-    team: (id) => cfg.teams.find((t) => t.id === id)?.name ?? `Team ${id}`,
-    field: (id) => cfg.fields.find((f) => f.id === id)?.name ?? `Field ${id}`,
-  };
   const byDate = new Map(days.map((d) => [d.date, d]));
   const selected = (picked ? byDate.get(picked) : undefined) ?? days.find((d) => d.date >= cfg.today) ?? firstDay;
   const selectedDate = selected.date;
@@ -98,7 +90,7 @@ export function CalendarPage() {
   const months = [...new Set(days.map((d) => d.date.slice(0, 7)))].sort();
   const monthIndex = months.indexOf(monthKey);
   const goToMonth = (key: string | undefined) => {
-    const first = days.find((d) => key && d.date.startsWith(key));
+    const first = key ? days.find((d) => d.date.startsWith(key)) : undefined;
     if (first) setPicked(first.date);
   };
 
@@ -164,7 +156,7 @@ export function CalendarPage() {
                 onClick={() => setPicked(date)}
               >
                 <span>{dayNumber}</span>
-                <i className={`dot dot-${statusSuffix(status)}`} />
+                <i className={`dot dot-${statusClass(status)}`} />
               </button>
             );
           })}
@@ -179,15 +171,12 @@ export function CalendarPage() {
               <StatusBadge status={selectedStatus} compact />
             </div>
             <h2>{formatDay(selected.date)}</h2>
-            {selected.slots.map((s) => {
-              const slot = cfg.slots.find((x) => x.id === s.slotId);
-              return (
-                <div key={s.slotId} className="slot">
-                  <p className="slot-time">{slot ? formatSlot(slot) : ""}</p>
-                  <SlotLines slot={s} lookup={lookup} />
-                </div>
-              );
-            })}
+            {selected.slots.map((s) => (
+              <div key={s.slotId} className="slot">
+                <p className="slot-time">{slotTime(cfg, s.slotId)}</p>
+                <SlotLines slot={s} config={cfg} />
+              </div>
+            ))}
           </div>
         </section>
       </div>

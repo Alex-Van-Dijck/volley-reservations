@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { captain, makeApi, renderWithApp } from "./test-utils";
 
@@ -26,6 +26,13 @@ describe("App shell", () => {
     expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
     await userEvent.click(signOut);
     expect(api.logout).toHaveBeenCalled();
+  });
+
+  it("signs out locally even when the logout request fails", async () => {
+    const api = makeApi({ me: async () => captain, logout: vi.fn().mockRejectedValue(new Error("offline")) });
+    renderWithApp(<App />, { api });
+    await userEvent.click(await screen.findByRole("button", { name: "Sign out" }));
+    expect((await screen.findAllByRole("link", { name: "Sign in" })).length).toBeGreaterThan(0);
   });
 
   it("toggles the theme", async () => {

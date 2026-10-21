@@ -1,11 +1,10 @@
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+import { MONTHS } from "../format";
 
 export function DateBlock({ date }: { date: string }) {
-  const d = new Date(`${date}T00:00:00Z`);
   return (
     <div className="event-date" aria-hidden="true">
-      <b>{d.getUTCDate()}</b>
-      <span>{MONTHS[d.getUTCMonth()]}</span>
+      <b>{Number(date.slice(8, 10))}</b>
+      <span>{MONTHS[Number(date.slice(5, 7)) - 1]?.toUpperCase()}</span>
     </div>
   );
 }

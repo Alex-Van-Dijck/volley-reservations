@@ -1,23 +1,36 @@
 import { ApiError } from "./api";
-import type { Slot, TeamStatus } from "./types";
+import type { Config, TeamStatus } from "./types";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-export function formatDay(date: string): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
-}
-
+export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
+const utc = (date: string) => new Date(`${date}T00:00:00Z`);
+
+export function formatDay(date: string): string {
+  const d = utc(date);
+  return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+}
+
 export const monthName = (monthKey: string): string => MONTH_NAMES[Number(monthKey.slice(5, 7)) - 1] ?? "";
 export const formatMonth = (monthKey: string): string => `${monthName(monthKey)} ${monthKey.slice(0, 4)}`;
 
-export const formatSlot =(slot: Slot): string => `${slot.start}-${slot.end}`;
+export const teamName = (config: Config, id: number): string =>
+  config.teams.find((t) => t.id === id)?.name ?? `Team ${id}`;
+
+export const fieldName = (config: Config, id: number): string =>
+  config.fields.find((f) => f.id === id)?.name ?? `Field ${id}`;
+
+export function slotTime(config: Config, slotId: number): string {
+  const slot = config.slots.find((s) => s.id === slotId);
+  return slot ? `${slot.start}-${slot.end}` : "";
+}
+
+export const cellLabel = (config: Config, date: string, slotId: number): string =>
+  `${formatDay(date)}, ${slotTime(config, slotId)}`;
 
 const STATUS: Record<TeamStatus, string> = {
   home: "Home game",
@@ -27,6 +40,7 @@ const STATUS: Record<TeamStatus, string> = {
   no_training: "No training",
 };
 export const statusLabel = (status: TeamStatus): string => STATUS[status];
+export const statusClass = (status: TeamStatus): string => status.replace("_", "-");
 
 const ERRORS: Record<string, string> = {
   FIELD_TAKEN: "That field is already taken.",

@@ -21,7 +21,7 @@ describe("BlockPanel", () => {
 
   it("blocks a slot with a reason", async () => {
     const { api } = setup();
-    await userEvent.selectOptions(await screen.findByLabelText("Date"), "2026-11-05");
+    await userEvent.selectOptions(await screen.findByLabelText("Date"), "Thu 5 Nov, 20:00-22:00");
     await userEvent.type(screen.getByLabelText("Reason"), "Hall closed");
     await userEvent.click(screen.getByRole("button", { name: "Block slot" }));
     expect(api.blockSlot).toHaveBeenCalledWith("2026-11-05", 1, "Hall closed");
@@ -47,18 +47,18 @@ describe("BlockPanel", () => {
     const { api } = setup(manager, {
       calendar: vi.fn().mockResolvedValueOnce(calendar).mockResolvedValue(blockedNov5),
     });
-    await userEvent.selectOptions(await screen.findByLabelText("Date"), "2026-11-05");
+    await userEvent.selectOptions(await screen.findByLabelText("Date"), "Thu 5 Nov, 20:00-22:00");
     await userEvent.click(screen.getByRole("button", { name: "Block slot" }));
     await waitFor(() => expect(api.calendar).toHaveBeenCalledTimes(2));
-    await screen.findByRole("button", { name: "Unblock 2026-11-05" });
+    await screen.findByRole("button", { name: "Unblock Thu 5 Nov, 20:00-22:00" });
     await userEvent.click(screen.getByRole("button", { name: "Block slot" }));
     expect(api.blockSlot).toHaveBeenNthCalledWith(2, "2026-10-22", 1, undefined);
-    expect(screen.getByLabelText("Date")).toHaveValue("2026-10-22");
+    expect(screen.getByLabelText("Date")).toHaveDisplayValue("Thu 22 Oct, 20:00-22:00");
   });
 
   it("unblocks a blocked date", async () => {
     const { api } = setup();
-    await userEvent.click(await screen.findByRole("button", { name: "Unblock 2026-10-29" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Unblock Thu 29 Oct, 20:00-22:00" }));
     expect(api.unblockSlot).toHaveBeenCalledWith("2026-10-29", 1);
     await waitFor(() => expect(api.calendar).toHaveBeenCalledTimes(2));
     expect(api.teamSchedule).toHaveBeenCalledTimes(2);

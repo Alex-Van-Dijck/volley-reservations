@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "./api";
-import { errorMessage, formatDay, formatSlot, statusLabel } from "./format";
+import { errorMessage, formatDay, slotTime, statusLabel } from "./format";
+import { config } from "./test-utils";
 
 describe("format", () => {
   it("formats days and slots", () => {
     expect(formatDay("2026-10-22")).toBe("Thu 22 Oct");
     expect(formatDay("2027-01-03")).toBe("Sun 3 Jan");
-    expect(formatSlot({ id: 1, weekday: 4, start: "20:00", end: "22:00" })).toBe("20:00-22:00");
+    expect(slotTime(config, 1)).toBe("20:00-22:00");
+    expect(slotTime(config, 99)).toBe("");
   });
 
   it("labels statuses", () => {

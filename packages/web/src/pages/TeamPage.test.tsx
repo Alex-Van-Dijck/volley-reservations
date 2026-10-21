@@ -14,6 +14,13 @@ describe("TeamPage", () => {
     expect(api.teamSchedule).toHaveBeenCalledWith(1);
   });
 
+  it("falls back to the first team for an unknown id", async () => {
+    const { api } = renderWithApp(<TeamPage />, { route: "/team/abc", path: "/team/:teamId?" });
+    await screen.findByText("Home game");
+    expect(api.teamSchedule).toHaveBeenCalledWith(1);
+    expect(api.teamSchedule).not.toHaveBeenCalledWith(NaN);
+  });
+
   it("defaults to the first team and switches team from the selector", async () => {
     const { api } = renderWithApp(<TeamPage />, { route: "/team", path: "/team/:teamId?" });
     await screen.findByText("Home game");

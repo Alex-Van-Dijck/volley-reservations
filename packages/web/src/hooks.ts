@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { errorMessage } from "./format";
 
 type LoadState<T> = { data: T | null; error: string | null; loading: boolean };
@@ -20,4 +20,30 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
   }, [...deps, tick]);
 
   return { ...state, reload: () => setTick((t) => t + 1) };
+}
+
+export type Run = (action: () => Promise<unknown>) => Promise<void>;
+
+export function useAction(onSuccess: () => void) {
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+
+  const run: Run = async (action) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+      onSuccess();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  };
+
+  return { run, busy, error };
 }

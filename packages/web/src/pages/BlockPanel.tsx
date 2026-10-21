@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { useApi } from "../api-context";
-import { formatDay } from "../format";
+import { cellLabel } from "../format";
+import type { Run } from "../hooks";
 import type { CalendarDay, Config } from "../types";
 
 type Props = {
   days: CalendarDay[];
   config: Config;
-  run: (action: () => Promise<unknown>) => Promise<void>;
+  run: Run;
+  busy: boolean;
 };
 
-export function BlockPanel({ days, run }: Props) {
+const cellKey = (date: string, slotId: number) => `${date}|${slotId}`;
+
+export function BlockPanel({ days, config, run, busy }: Props) {
   const api = useApi();
-  const free = days.filter((d) => d.slots.some((s) => !s.blocked));
-  const blocked = days.flatMap((d) => d.slots.filter((s) => s.blocked).map((s) => ({ date: d.date, slot: s })));
-  const [date, setDate] = useState<string | null>(null);
+  const cells = days.flatMap((d) => d.slots.map((slot) => ({ date: d.date, slot, key: cellKey(d.date, slot.slotId) })));
+  const free = cells.filter((c) => !c.slot.blocked);
+  const blocked = cells.filter((c) => c.slot.blocked);
+  const [picked, setPicked] = useState<string | null>(null);
   const [reason, setReason] = useState("");
-  const chosen = date !== null && free.some((d) => d.date === date) ? date : (free[0]?.date ?? null);
+  const chosen = free.find((c) => c.key === picked) ?? free[0];
 
   return (
     <section className="block-panel">
@@ -27,21 +32,20 @@ export function BlockPanel({ days, run }: Props) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const day = days.find((d) => d.date === chosen);
-          const slot = day?.slots.find((s) => !s.blocked);
-          if (!day || !slot) return;
+          if (!chosen) return;
+          const trimmed = reason.trim();
           void run(async () => {
-            await api.blockSlot(day.date, slot.slotId, reason.trim() === "" ? undefined : reason.trim());
+            await api.blockSlot(chosen.date, chosen.slot.slotId, trimmed === "" ? undefined : trimmed);
             setReason("");
           });
         }}
       >
         <label className="field">
           Date
-          <select value={chosen ?? ""} onChange={(e) => setDate(e.target.value)}>
-            {free.map((d) => (
-              <option key={d.date} value={d.date}>
-                {d.date}
+          <select value={chosen?.key ?? ""} onChange={(e) => setPicked(e.target.value)}>
+            {free.map((c) => (
+              <option key={c.key} value={c.key}>
+                {cellLabel(config, c.date, c.slot.slotId)}
               </option>
             ))}
           </select>
@@ -50,22 +54,23 @@ export function BlockPanel({ days, run }: Props) {
           Reason
           <input value={reason} onChange={(e) => setReason(e.target.value)} />
         </label>
-        <button type="submit" className="danger-button">
+        <button type="submit" className="danger-button" disabled={busy || !chosen}>
           Block slot
         </button>
       </form>
       <ul className="blocked-list">
-        {blocked.map(({ date: d, slot }) => (
-          <li key={`${d}|${slot.slotId}`} className="blocked-row">
+        {blocked.map(({ date, slot, key }) => (
+          <li key={key} className="blocked-row">
             <div>
-              <strong>{formatDay(d)}</strong>
+              <strong>{cellLabel(config, date, slot.slotId)}</strong>
               <span>{slot.blockReason ?? "Blocked"}</span>
             </div>
             <button
               type="button"
               className="outline-button small"
-              aria-label={`Unblock ${d}`}
-              onClick={() => void run(() => api.unblockSlot(d, slot.slotId))}
+              aria-label={`Unblock ${cellLabel(config, date, slot.slotId)}`}
+              disabled={busy}
+              onClick={() => void run(() => api.unblockSlot(date, slot.slotId))}
             >
               Unblock
             </button>

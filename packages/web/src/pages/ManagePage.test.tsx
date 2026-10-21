@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api";
@@ -64,7 +64,7 @@ describe("ManagePage", () => {
   it("moves a home game to another date and field", async () => {
     const { api } = setup();
     await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-22" }));
-    await userEvent.selectOptions(screen.getByLabelText("New date"), "2026-11-05");
+    await userEvent.selectOptions(screen.getByLabelText("New date"), "Thu 5 Nov");
     await userEvent.selectOptions(screen.getByLabelText("New field"), "Field 2");
     await userEvent.click(screen.getByRole("button", { name: "Save 2026-10-22" }));
     expect(api.moveEvent).toHaveBeenCalledWith("e1", { date: "2026-11-05", slotId: 1, fieldId: 2 });
@@ -107,6 +107,33 @@ describe("ManagePage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Reserve 2026-11-05" }));
     await userEvent.click(screen.getByRole("button", { name: "Save 2026-11-05" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("That field is already taken.");
+  });
+
+  it("only offers fields that are free on the target date when moving", async () => {
+    setup();
+    await userEvent.click(await screen.findByRole("button", { name: "Move 2026-10-22" }));
+    const field = screen.getByLabelText("New field");
+    expect(within(field).getAllByRole("option").map((o) => o.textContent)).toEqual(["Field 1", "Field 2"]);
+    await userEvent.selectOptions(screen.getByLabelText("New date"), "Thu 29 Oct");
+    expect(screen.getByLabelText("New field")).toHaveDisplayValue("No free field");
+    expect(screen.getByRole("button", { name: "Save 2026-10-22" })).toBeDisabled();
+  });
+
+  it("ignores a second click while a request is running", async () => {
+    let finish = () => {};
+    const { api } = setup(captain, {
+      cancelEvent: vi.fn(() => new Promise<void>((resolve) => (finish = resolve))),
+    });
+    const cancel = await screen.findByRole("button", { name: "Cancel 2026-10-22" });
+    await userEvent.click(cancel);
+    await userEvent.click(cancel);
+    expect(api.cancelEvent).toHaveBeenCalledTimes(1);
+    finish();
+  });
+
+  it("explains when a captain has no team", async () => {
+    setup({ ...captain, teamId: null });
+    expect(await screen.findByRole("alert")).toHaveTextContent("not linked to a team");
   });
 
   it("lets the manager pick a team", async () => {

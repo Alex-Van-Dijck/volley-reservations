@@ -7,7 +7,7 @@ test("captain reserves an away game and cancels it", async ({ page }) => {
   test.skip(password === "", "set E2E_PASSWORD to the seeded password of the e2e user");
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Club calendar" })).toBeVisible();
+  await expect(page.getByText("Club calendar")).toBeVisible();
 
   await page.getByRole("link", { name: "Sign in" }).click();
   await page.getByLabel("Username").fill(user);

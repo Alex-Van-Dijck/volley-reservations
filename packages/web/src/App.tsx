@@ -13,7 +13,7 @@ export function App() {
   const { dark, toggle } = useTheme();
   return (
     <div className="app">
-      <Header user={user} dark={dark} onToggleTheme={toggle} onLogout={() => void logout()} />
+      <Header user={user} dark={dark} onToggleTheme={toggle} onLogout={() => void logout().catch(() => undefined)} />
       <div className="page-shell">
         <main>
           <Routes>
