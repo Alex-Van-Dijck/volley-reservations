@@ -35,7 +35,7 @@ function Brand() {
 export function Header({ user, dark, onToggleTheme, onLogout }: Props) {
   return (
     <header className="topbar">
-      <Link to="/" className="brand-link" aria-label="Go to club calendar">
+      <Link to="/" className="brand-link">
         <Brand />
       </Link>
       <nav className="desktop-nav" aria-label="Main navigation">

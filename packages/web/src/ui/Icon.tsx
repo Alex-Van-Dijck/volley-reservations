@@ -11,6 +11,7 @@ export type IconName =
   | "x"
   | "alert"
   | "chevron"
+  | "login"
   | "logout";
 
 const PATHS: Record<IconName, ReactNode> = {
@@ -46,7 +47,8 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   chevron: <path d="m6 9 6 6 6-6" />,
-  logout: <path d="M10 17l5-5-5-5M15 12H3M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />,
+  login: <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />,
+  logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />,
 };
 
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
