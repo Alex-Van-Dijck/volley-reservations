@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const user = process.env["E2E_USER"] ?? "captain1";
 const password = process.env["E2E_PASSWORD"] ?? "";
 
-test("captain reserves an away game and cancels it", async ({ page }) => {
+test("captain reserves a home game and cancels it", async ({ page }) => {
   test.skip(password === "", "set E2E_PASSWORD to the seeded password of the e2e user");
 
   await page.goto("/");
@@ -19,7 +19,6 @@ test("captain reserves an away game and cancels it", async ({ page }) => {
   const label = (await reserve.getAttribute("aria-label")) ?? "";
   const date = label.replace("Reserve ", "");
   await reserve.click();
-  await page.getByLabel("Type").selectOption("away");
   await page.getByRole("button", { name: `Save ${date}` }).click();
 
   const cancel = page.getByRole("button", { name: `Cancel ${date}` });

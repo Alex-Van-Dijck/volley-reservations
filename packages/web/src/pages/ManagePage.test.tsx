@@ -40,25 +40,12 @@ describe("ManagePage", () => {
     });
   });
 
-  it("reserves an away game without a field", async () => {
-    const { api } = setup();
-    await userEvent.click(await screen.findByRole("button", { name: "Reserve 2026-11-05" }));
-    await userEvent.selectOptions(screen.getByLabelText("Type"), "away");
-    await userEvent.click(screen.getByRole("button", { name: "Save 2026-11-05" }));
-    expect(api.createEvent).toHaveBeenCalledWith({
-      teamId: 1,
-      date: "2026-11-05",
-      slotId: 1,
-      type: "away",
-      fieldId: null,
-    });
-  });
-
-  it("does not offer a home game when no field is free", async () => {
+  it("only offers home games and cannot save when no field is free", async () => {
     setup();
     await userEvent.click(await screen.findByRole("button", { name: "Reserve 2026-10-29" }));
-    expect(screen.getByRole("option", { name: "Home game" })).toBeDisabled();
-    expect(screen.getByLabelText("Type")).toHaveValue("away");
+    expect(screen.queryByLabelText("Type")).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "No free field" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save 2026-10-29" })).toBeDisabled();
   });
 
   it("moves a home game to another date and field", async () => {

@@ -70,7 +70,6 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
   const toggle = (next: "reserve" | "move") => setMode(mode === next ? null : next);
 
   const reserveFields = day.practiceFieldIds;
-  const [type, setType] = useState<"home" | "away">(reserveFields.length > 0 ? "home" : "away");
   const [reserveField, setReserveField] = useState<number | null>(null);
   const chosenReserveField = pick(reserveField, reserveFields);
 
@@ -91,8 +90,8 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
         teamId,
         date: day.date,
         slotId: day.slotId,
-        type,
-        fieldId: type === "home" ? chosenReserveField : null,
+        type: "home",
+        fieldId: chosenReserveField,
       });
       setMode(null);
     });
@@ -156,27 +155,22 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
           }}
         >
           <label className={field}>
-            Type
-            <select value={type} onChange={(e) => setType(e.target.value as "home" | "away")}>
-              <option value="home" disabled={reserveFields.length === 0}>
-                Home game
-              </option>
-              <option value="away">Away game</option>
+            Field
+            <select value={chosenReserveField ?? ""} onChange={(e) => setReserveField(Number(e.target.value))}>
+              {reserveFields.length === 0 && <option value="">No free field</option>}
+              {reserveFields.map((id) => (
+                <option key={id} value={id}>
+                  {fieldName(config, id)}
+                </option>
+              ))}
             </select>
           </label>
-          {type === "home" && (
-            <label className={field}>
-              Field
-              <select value={chosenReserveField ?? ""} onChange={(e) => setReserveField(Number(e.target.value))}>
-                {reserveFields.map((id) => (
-                  <option key={id} value={id}>
-                    {fieldName(config, id)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <button type="submit" className={button()} aria-label={`Save ${day.date}`} disabled={busy}>
+          <button
+            type="submit"
+            className={button()}
+            aria-label={`Save ${day.date}`}
+            disabled={busy || chosenReserveField === null}
+          >
             Save
           </button>
         </form>

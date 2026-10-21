@@ -61,9 +61,11 @@ describe("create", () => {
     expect(await prisma.event.count()).toBe(1);
   });
 
-  it("lets several teams enter away games in the same slot", async () => {
-    expect((await send("POST", "/api/events", cap1, bookBody(0, THU1, "away", null))).statusCode).toBe(201);
-    expect((await send("POST", "/api/events", cap2, bookBody(1, THU1, "away", null))).statusCode).toBe(201);
+  it("refuses to reserve an away game", async () => {
+    const res = await send("POST", "/api/events", cap1, bookBody(0, THU1, "away", null));
+    expect(res.statusCode).toBe(400);
+    expect(res.json().code).toBe("VALIDATION_ERROR");
+    expect(await prisma.event.count()).toBe(0);
   });
 
   it("lets the manager book for any team", async () => {
@@ -92,20 +94,18 @@ describe("create", () => {
     expect(res.json().code).toBe("TEAM_BUSY");
   });
 
-  it("refuses a home game in a blocked slot but allows an away game", async () => {
+  it("refuses a home game in a blocked slot", async () => {
     await prisma.block.create({ data: { date: toDate(THU1), slotId: w.slot.id } });
     const home = await send("POST", "/api/events", cap1, bookBody(0, THU1, "home", 0));
     expect(home.statusCode).toBe(409);
     expect(home.json().code).toBe("SLOT_BLOCKED");
-    expect((await send("POST", "/api/events", cap1, bookBody(0, THU1, "away", null))).statusCode).toBe(201);
   });
 
   it.each([
     ["FIELD_REQUIRED", () => bookBody(0, THU1, "home", null)],
-    ["FIELD_NOT_ALLOWED", () => bookBody(0, THU1, "away", 0)],
-    ["WEEKDAY_MISMATCH", () => bookBody(0, "2026-10-23", "away", null)],
-    ["DATE_IN_PAST", () => bookBody(0, PAST_THU, "away", null)],
-    ["OUT_OF_SEASON", () => bookBody(0, "2027-09-02", "away", null)],
+    ["WEEKDAY_MISMATCH", () => bookBody(0, "2026-10-23", "home", 0)],
+    ["DATE_IN_PAST", () => bookBody(0, PAST_THU, "home", 0)],
+    ["OUT_OF_SEASON", () => bookBody(0, "2027-09-02", "home", 0)],
   ])("rejects %s with 422", async (code, makeBody) => {
     const res = await send("POST", "/api/events", manager, makeBody());
     expect(res.statusCode).toBe(422);
@@ -121,7 +121,7 @@ describe("create", () => {
   });
 
   it("rejects an impossible calendar date", async () => {
-    const res = await send("POST", "/api/events", manager, bookBody(0, "2026-02-30", "away", null));
+    const res = await send("POST", "/api/events", manager, bookBody(0, "2026-02-30", "home", 0));
     expect(res.statusCode).toBe(400);
     expect(res.json().code).toBe("VALIDATION_ERROR");
   });

@@ -65,11 +65,11 @@ export function eventRoutes(app: App, deps: Deps): void {
   app.post("/api/events", async (req, reply) => {
     const actor = await requireActor(deps, req);
     const b = (req.body ?? {}) as Record<string, unknown>;
-    if (!Number.isInteger(b.teamId) || (b.type !== "home" && b.type !== "away")) {
-      throw new AppError("VALIDATION_ERROR", "teamId and type (home or away) are required");
+    if (!Number.isInteger(b.teamId) || b.type !== "home") {
+      throw new AppError("VALIDATION_ERROR", "teamId and type (home) are required, only home games can be reserved");
     }
     const teamId = b.teamId as number;
-    const type = b.type;
+    const type = "home" as const;
     const cell = parseCell(b);
     assertOwnsTeam(actor, teamId);
     await requireExisting("team", teamId);
