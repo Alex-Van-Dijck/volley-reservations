@@ -17,31 +17,38 @@ export function CalendarPage() {
   if (!config.data || !calendar.data) return <p>Loading...</p>;
 
   const cfg = config.data;
-  const team = (id: number) => cfg.teams.find((t) => t.id === id)?.name ?? `Team ${id}`;
-  const field = (id: number) => cfg.fields.find((f) => f.id === id)?.name ?? `Field ${id}`;
+  const team = (id: number) =>
+    cfg.teams.find((t) => t.id === id)?.name ?? `Team ${id}`;
+  const field = (id: number) =>
+    cfg.fields.find((f) => f.id === id)?.name ?? `Field ${id}`;
   const slotOf = (id: number) => cfg.slots.find((s) => s.id === id);
 
   return (
     <section>
-      <PageIntro
-        eyebrow="Fields and practice"
-        title="Club calendar"
-        copy="A shared view of home games, away games and free fields."
-      />
+      <PageIntro eyebrow="Fields and practice" title="Club calendar" />
       <Legend />
       <ul className="event-grid">
         {calendar.data.days.map((day) => (
-          <li key={day.date} className={`event-card${day.slots.some((s) => s.blocked) ? " is-blocked" : ""}`}>
+          <li
+            key={day.date}
+            className={`event-card${day.slots.some((s) => s.blocked) ? " is-blocked" : ""}`}
+          >
             <DateBlock date={day.date} />
             <div>
               <h2>{formatDay(day.date)}</h2>
               {day.slots.map((s) => (
                 <div key={s.slotId} className="slot">
-                  <p className="slot-time">{slotOf(s.slotId) ? formatSlot(slotOf(s.slotId)!) : ""}</p>
+                  <p className="slot-time">
+                    {slotOf(s.slotId) ? formatSlot(slotOf(s.slotId)!) : ""}
+                  </p>
                   {s.blocked && (
                     <div className="slot-line">
                       <StatusMark status="unavailable" />
-                      <p>{s.blockReason ? `Blocked: ${s.blockReason}` : "Blocked"}</p>
+                      <p>
+                        {s.blockReason
+                          ? `Blocked: ${s.blockReason}`
+                          : "Blocked"}
+                      </p>
                     </div>
                   )}
                   {s.homeGames.map((g) => (
@@ -58,7 +65,13 @@ export function CalendarPage() {
                   ))}
                   {!s.blocked && (
                     <div className="slot-line">
-                      <StatusMark status={s.practiceFieldIds.length > 0 ? "training" : "no_training"} />
+                      <StatusMark
+                        status={
+                          s.practiceFieldIds.length > 0
+                            ? "training"
+                            : "no_training"
+                        }
+                      />
                       <p>
                         {s.practiceFieldIds.length > 0
                           ? `Free to practice: ${s.practiceFieldIds.map(field).join(", ")}`

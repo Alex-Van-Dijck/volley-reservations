@@ -290,7 +290,6 @@ function PageIntro({
       <div>
         <span className="eyebrow">{eyebrow}</span>
         <h1>{title}</h1>
-        <p>{copy}</p>
       </div>
       {action}
     </div>
@@ -328,7 +327,6 @@ function CalendarScreen() {
       <PageIntro
         eyebrow="Club calendar"
         title="April 2025"
-        copy="A shared view of matches, practice, and field availability."
         action={
           <div className="month-switcher">
             <button aria-label="Previous month">‹</button>

@@ -45,11 +45,10 @@ describe("ErrorBanner", () => {
 });
 
 describe("PageIntro", () => {
-  it("renders eyebrow, level 1 title, copy and action", () => {
-    render(<PageIntro eyebrow="Teams" title="Team schedule" copy="Pick one." action={<button>Go</button>} />);
+  it("renders eyebrow, level 1 title and action", () => {
+    render(<PageIntro eyebrow="Teams" title="Team schedule" action={<button>Go</button>} />);
     expect(screen.getByRole("heading", { level: 1, name: "Team schedule" })).toBeInTheDocument();
     expect(screen.getByText("Teams")).toBeInTheDocument();
-    expect(screen.getByText("Pick one.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Go" })).toBeInTheDocument();
   });
 });
