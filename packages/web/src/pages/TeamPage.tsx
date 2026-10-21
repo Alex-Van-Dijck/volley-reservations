@@ -1,12 +1,49 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { css } from "styled-system/css";
 import { useApi } from "../api-context";
 import { fieldName, formatDay, slotTime, teamName } from "../format";
 import { useLoad } from "../hooks";
 import { DateBlock } from "../ui/DateBlock";
 import { ErrorBanner } from "../ui/ErrorBanner";
+import { Eyebrow } from "../ui/Eyebrow";
 import { PageIntro } from "../ui/PageIntro";
 import { StatusBadge } from "../ui/StatusBadge";
 import { TeamPicker } from "../ui/TeamPicker";
+
+const section = css({ mt: { base: "70px", mdDown: "50px" } });
+
+const heading = css({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "end",
+  mb: "20px",
+  "& h2": { m: 0 },
+});
+
+const countPill = css({
+  layerStyle: "card",
+  textStyle: "pill",
+  py: "8px",
+  px: "12px",
+});
+
+const list = css({ display: "grid", gap: "8px" });
+
+const card = css({
+  p: { base: "20px", mdDown: "16px 12px" },
+  layerStyle: "card",
+  display: "grid",
+  gridTemplateColumns: { base: "70px 1fr", mdDown: "55px 1fr" },
+  alignItems: "center",
+  gap: { base: "20px", mdDown: "10px" },
+  _hover: { borderColor: "ink" },
+});
+
+const copy = css({
+  "& > span": { mb: "9px" },
+  "& h3": { mb: "4px" },
+  "& p": { textStyle: "small" },
+});
 
 export function TeamPage() {
   const api = useApi();
@@ -30,19 +67,19 @@ export function TeamPage() {
     <section>
       <PageIntro eyebrow="Teams" title="Team schedule" />
       <TeamPicker teams={cfg.teams} value={teamId} onChange={(id) => navigate(`/team/${id}`)} />
-      <div className="section-block">
-        <div className="section-heading">
+      <div className={section}>
+        <div className={heading}>
           <div>
-            <span className="eyebrow">Season</span>
+            <Eyebrow>Season</Eyebrow>
             <h2>{teamName(cfg, teamId)}</h2>
           </div>
-          <span className="count-pill">{`${days.length} dates`}</span>
+          <span className={countPill}>{`${days.length} dates`}</span>
         </div>
-        <ul className="schedule-list">
+        <ul className={list}>
           {days.map((d) => (
-            <li key={`${d.date}|${d.slotId}`} className="schedule-card">
+            <li key={`${d.date}|${d.slotId}`} className={card}>
               <DateBlock date={d.date} />
-              <div className="schedule-copy">
+              <div className={copy}>
                 <StatusBadge status={d.status} compact />
                 <h3>{showTime ? `${formatDay(d.date)}, ${slotTime(cfg, d.slotId)}` : formatDay(d.date)}</h3>
                 {d.fieldId !== null && <p>{fieldName(cfg, d.fieldId)}</p>}

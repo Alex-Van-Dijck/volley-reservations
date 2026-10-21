@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { css } from "styled-system/css";
+import { button } from "styled-system/recipes";
 import { useApi } from "../api-context";
 import { fieldName, formatDay } from "../format";
 import type { Run } from "../hooks";
@@ -15,6 +17,49 @@ type Props = {
   run: Run;
   busy: boolean;
 };
+
+const row = css({
+  display: "grid",
+  gridTemplateColumns: { base: "70px 1fr auto", mdDown: "52px 1fr" },
+  gap: { base: "20px", mdDown: "12px" },
+  alignItems: "center",
+  p: { base: "20px 24px", mdDown: "18px 14px" },
+  borderBottom: "1px solid",
+  borderColor: "line",
+  _last: { borderBottom: 0 },
+});
+
+const copy = css({
+  "& > span": { mb: "6px" },
+  "& h3": { m: "0 0 4px" },
+  "& p": { textStyle: "small" },
+});
+
+const actions = css({
+  display: "flex",
+  gap: "7px",
+  mdDown: { gridColumn: "1 / -1", ml: "64px" },
+});
+
+const inlineForm = css({
+  gridColumn: "1 / -1",
+  bg: "soft",
+  p: "16px",
+  display: "grid",
+  gridTemplateColumns: { base: "1fr 1fr auto", mdDown: "1fr" },
+  gap: "12px",
+  alignItems: "end",
+  borderLeft: "3px solid",
+  borderColor: "ink",
+  mdDown: { mt: "4px" },
+});
+
+const field = css({
+  display: "grid",
+  gap: "6px",
+  textStyle: "label",
+  "& input, & select": { minWidth: 0, width: "100%" },
+});
 
 const pick = (wanted: number | null, options: number[]) =>
   wanted !== null && options.includes(wanted) ? wanted : (options[0] ?? null);
@@ -61,19 +106,19 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
   }
 
   return (
-    <li className="manage-row">
+    <li className={row}>
       <DateBlock date={day.date} />
-      <div className="manage-copy">
+      <div className={copy}>
         <StatusBadge status={day.status} compact />
         <h3>{formatDay(day.date)}</h3>
         {day.fieldId !== null && <p>{fieldName(config, day.fieldId)}</p>}
       </div>
-      <div className="row-actions">
+      <div className={actions}>
         {day.eventId ? (
           <>
             <button
               type="button"
-              className="outline-button small"
+              className={button({ visual: "outline", size: "sm" })}
               aria-label={`Move ${day.date}`}
               aria-expanded={mode === "move"}
               onClick={() => toggle("move")}
@@ -82,7 +127,7 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
             </button>
             <button
               type="button"
-              className="danger-button small"
+              className={button({ visual: "danger", size: "sm" })}
               aria-label={`Cancel ${day.date}`}
               disabled={busy}
               onClick={() => void run(() => api.cancelEvent(day.eventId!))}
@@ -93,7 +138,7 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
         ) : (
           <button
             type="button"
-            className="solid-button small"
+            className={button({ size: "sm" })}
             aria-label={`Reserve ${day.date}`}
             aria-expanded={mode === "reserve"}
             onClick={() => toggle("reserve")}
@@ -104,13 +149,13 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
       </div>
       {mode === "reserve" && (
         <form
-          className="inline-form"
+          className={inlineForm}
           onSubmit={(e) => {
             e.preventDefault();
             reserve();
           }}
         >
-          <label className="field">
+          <label className={field}>
             Type
             <select value={type} onChange={(e) => setType(e.target.value as "home" | "away")}>
               <option value="home" disabled={reserveFields.length === 0}>
@@ -120,7 +165,7 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
             </select>
           </label>
           {type === "home" && (
-            <label className="field">
+            <label className={field}>
               Field
               <select value={chosenReserveField ?? ""} onChange={(e) => setReserveField(Number(e.target.value))}>
                 {reserveFields.map((id) => (
@@ -131,20 +176,20 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
               </select>
             </label>
           )}
-          <button type="submit" className="solid-button" aria-label={`Save ${day.date}`} disabled={busy}>
+          <button type="submit" className={button()} aria-label={`Save ${day.date}`} disabled={busy}>
             Save
           </button>
         </form>
       )}
       {mode === "move" && day.eventId && (
         <form
-          className="inline-form"
+          className={inlineForm}
           onSubmit={(e) => {
             e.preventDefault();
             move(day.eventId!);
           }}
         >
-          <label className="field">
+          <label className={field}>
             New date
             <select value={moveDate} onChange={(e) => setMoveDate(e.target.value)}>
               {dates.map((d) => (
@@ -155,7 +200,7 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
             </select>
           </label>
           {isHome && (
-            <label className="field">
+            <label className={field}>
               New field
               <select value={chosenMoveField ?? ""} onChange={(e) => setMoveField(Number(e.target.value))}>
                 {moveFields.length === 0 && <option value="">No free field</option>}
@@ -169,7 +214,7 @@ export function ReservationRow({ day, teamId, config, dates, cell, run, busy }: 
           )}
           <button
             type="submit"
-            className="solid-button"
+            className={button()}
             aria-label={`Save ${day.date}`}
             disabled={busy || (isHome && chosenMoveField === null)}
           >

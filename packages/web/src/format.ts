@@ -40,7 +40,6 @@ const STATUS: Record<TeamStatus, string> = {
   no_training: "No training",
 };
 export const statusLabel = (status: TeamStatus): string => STATUS[status];
-export const statusClass = (status: TeamStatus): string => status.replace("_", "-");
 
 const ERRORS: Record<string, string> = {
   FIELD_TAKEN: "That field is already taken.",

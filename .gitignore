@@ -42,3 +42,7 @@ Thumbs.db
 # Local tooling
 .claude/settings.local.json
 .superpowers/
+.playwright-mcp/
+
+# Panda
+styled-system

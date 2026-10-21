@@ -1,15 +1,34 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
+import { css } from "styled-system/css";
 import { useApi } from "../api-context";
 import { useAuth } from "../auth-context";
 import { teamName } from "../format";
 import { useAction, useLoad } from "../hooks";
 import type { User } from "../types";
 import { ErrorBanner } from "../ui/ErrorBanner";
+import { Eyebrow } from "../ui/Eyebrow";
 import { PageIntro } from "../ui/PageIntro";
 import { TeamPicker } from "../ui/TeamPicker";
 import { BlockPanel } from "./BlockPanel";
 import { ReservationRow } from "./ReservationRow";
+
+const managerPill = css({
+  layerStyle: "card",
+  textStyle: "pill",
+  py: "8px",
+  px: "12px",
+  mdDown: { display: "inline-block", mt: "18px" },
+});
+
+const block = css({ layerStyle: "card" });
+
+const blockHead = css({
+  p: { base: "24px", mdDown: "18px" },
+  borderBottom: "1px solid",
+  borderColor: "line",
+  "& h2": { m: 0, fontSize: "24px" },
+});
 
 export function ManagePage() {
   const { user, loading } = useAuth();
@@ -50,16 +69,16 @@ function ManageTeam({ user }: { user: User }) {
       <PageIntro
         eyebrow="Reservations"
         title="Manage"
-        action={isManager ? <span className="manager-pill">Manager access</span> : undefined}
+        action={isManager ? <span className={managerPill}>Manager access</span> : undefined}
       />
       {isManager && <TeamPicker teams={cfg.teams} value={teamId} onChange={setPicked} />}
       {action.error && <ErrorBanner message={action.error} />}
-      <div className="manager-block">
-        <div className="manager-block-head">
-          <span className="eyebrow">{teamName(cfg, teamId)}</span>
+      <div className={block}>
+        <div className={blockHead}>
+          <Eyebrow>{teamName(cfg, teamId)}</Eyebrow>
           <h2>Field reservations</h2>
         </div>
-        <ul className="manage-list">
+        <ul>
           {days.map((day) => (
             <ReservationRow
               key={`${teamId}|${day.date}|${day.slotId}`}

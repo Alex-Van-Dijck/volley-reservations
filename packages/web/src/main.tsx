@@ -11,7 +11,7 @@ import "@fontsource/dm-sans/latin-600.css";
 import "@fontsource/dm-sans/latin-700.css";
 import "@fontsource/space-grotesk/latin-600.css";
 import "@fontsource/space-grotesk/latin-700.css";
-import "./styles.css";
+import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { css } from "styled-system/css";
+import { calendarDay, dot, fieldSection } from "styled-system/recipes";
 import { useApi } from "../api-context";
-import { fieldName, formatDay, formatMonth, monthName, slotTime, statusClass, statusLabel, teamName } from "../format";
+import { fieldName, formatDay, formatMonth, monthName, slotTime, statusLabel, teamName } from "../format";
 import { useLoad } from "../hooks";
 import type { CalendarDay, CalendarSlot, Config, TeamStatus } from "../types";
 import { DateBlock } from "../ui/DateBlock";
@@ -10,6 +12,87 @@ import { PageIntro } from "../ui/PageIntro";
 import { StatusBadge, StatusMark } from "../ui/StatusBadge";
 
 const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
+
+const monthSwitcher = css({
+  height: "46px",
+  layerStyle: "card",
+  display: "flex",
+  alignItems: "center",
+  mdDown: { mt: "20px", width: "fit-content" },
+  "& button": {
+    height: "100%",
+    width: "44px",
+    border: 0,
+    bg: "transparent",
+    color: "ink",
+    fontSize: "24px",
+    _disabled: { color: "muted", opacity: 0.4, cursor: "default" },
+  },
+  "& span": { px: "12px", fontWeight: 700, minWidth: "90px", textAlign: "center" },
+});
+
+const panel = css({
+  layerStyle: "card",
+  p: { base: "24px", mdDown: "12px" },
+});
+
+const gridColumns = {
+  display: "grid",
+  gridTemplateColumns: "repeat(7, 1fr)",
+  gap: { base: "7px", mdDown: "3px" },
+} as const;
+
+const weekdays = css(gridColumns, {
+  "& span": { textAlign: "center", fontSize: "11px", color: "muted", fontWeight: 700, pb: "8px" },
+});
+
+const grid = css(gridColumns);
+
+const selectedPanel = css({
+  mt: "18px",
+  border: "1px solid",
+  borderColor: "ink",
+  p: { base: "22px", mdDown: "16px 10px" },
+  display: "grid",
+  gridTemplateColumns: { base: "64px 1fr", mdDown: "46px 1fr" },
+  alignItems: "start",
+  gap: { base: "22px", mdDown: "12px" },
+  "&[data-blocked]": { borderColor: "crimson" },
+});
+
+const detailHead = css({ display: "flex", alignItems: "center", gap: "10px", mb: "8px" });
+
+const detailTitle = css({ fontSize: { base: "22px", mdDown: "17px" }, mb: "8px" });
+
+const slot = css({ "& + &": { mt: "14px" } });
+
+const slotTimeText = css({ fontSize: "12px", fontWeight: 700, letterSpacing: "0.04em" });
+
+const slotLine = css({
+  display: "flex",
+  alignItems: "flex-start",
+  gap: "8px",
+  mt: "6px",
+  "& > span": { mt: "4px" },
+  "& p": { textStyle: "small", color: "ink" },
+});
+
+const slotNote = css({ textStyle: "small", color: "crimson", mt: "6px" });
+
+const fieldStrip = css({
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  aspectRatio: "2 / 1",
+  maxWidth: "480px",
+  gap: "4px",
+  mt: "6px",
+  p: "4px",
+  bg: "paper",
+  border: "2px solid",
+  borderColor: "ink",
+});
+
+const mobileBreak = css({ display: { base: "none", mdDown: "inline" } });
 
 function dayStatus(day: CalendarDay): TeamStatus {
   if (day.slots.some((s) => s.blocked)) return "unavailable";
@@ -21,7 +104,13 @@ function dayStatus(day: CalendarDay): TeamStatus {
 
 const FIELD_SECTIONS = 3;
 
-function fieldSection(slot: CalendarSlot, config: Config, fieldId: number) {
+type FieldState = "blocked" | "home" | "training" | "unavailable";
+
+function fieldState(
+  slot: CalendarSlot,
+  config: Config,
+  fieldId: number,
+): { state: FieldState; label: string; name: string } {
   const name = fieldName(config, fieldId);
   if (slot.blocked) return { state: "blocked", label: "Blocked", name };
   const home = slot.homeGames.find((g) => g.fieldId === fieldId);
@@ -36,32 +125,37 @@ function breakAfterFirstWord(label: string) {
   return (
     <>
       {label.slice(0, space + 1)}
-      <br className="mobile-break" />
+      <br className={mobileBreak} />
       {label.slice(space + 1)}
     </>
   );
 }
 
-function SlotLines({ slot, config }: { slot: CalendarSlot; config: Config }) {
-  const sections = config.fields.slice(0, FIELD_SECTIONS - 1).map((f) => ({ id: f.id, ...fieldSection(slot, config, f.id) }));
+function SlotLines({ slot: calSlot, config }: { slot: CalendarSlot; config: Config }) {
+  const sections = config.fields
+    .slice(0, FIELD_SECTIONS - 1)
+    .map((f) => ({ id: f.id, ...fieldState(calSlot, config, f.id) }));
   const spare = FIELD_SECTIONS - sections.length;
 
   return (
     <>
-      <div className="field-strip">
-        {sections.map((s) => (
-          <div key={s.id} className={`field-section field-${s.state}`}>
-            <span className="field-name">{s.name}</span>
-            <strong>{breakAfterFirstWord(s.label)}</strong>
-          </div>
-        ))}
+      <div className={fieldStrip}>
+        {sections.map((s) => {
+          const parts = fieldSection({ state: s.state });
+          return (
+            <div key={s.id} className={parts.root}>
+              <span className={parts.name}>{s.name}</span>
+              <strong className={parts.label}>{breakAfterFirstWord(s.label)}</strong>
+            </div>
+          );
+        })}
         {Array.from({ length: spare }, (_, i) => (
-          <div key={`spare-${i}`} className="field-section field-spare" aria-hidden="true" />
+          <div key={`spare-${i}`} className={fieldSection({ state: "spare" }).root} aria-hidden="true" />
         ))}
       </div>
-      {slot.blocked && slot.blockReason && <p className="slot-note">{`Blocked: ${slot.blockReason}`}</p>}
-      {slot.awayGames.map((g) => (
-        <div key={g.eventId} className="slot-line">
+      {calSlot.blocked && calSlot.blockReason && <p className={slotNote}>{`Blocked: ${calSlot.blockReason}`}</p>}
+      {calSlot.awayGames.map((g) => (
+        <div key={g.eventId} className={slotLine}>
           <StatusMark status="away" />
           <p>{`${teamName(config, g.teamId)} away`}</p>
         </div>
@@ -116,7 +210,7 @@ export function CalendarPage() {
         eyebrow="Club calendar"
         title={formatMonth(monthKey)}
         action={
-          <div className="month-switcher">
+          <div className={monthSwitcher}>
             <button
               type="button"
               aria-label="Previous month"
@@ -137,15 +231,15 @@ export function CalendarPage() {
           </div>
         }
       />
-      <div className="panel calendar-panel">
-        <div className="calendar-weekdays" aria-hidden="true">
+      <div className={panel}>
+        <div className={weekdays} aria-hidden="true">
           {WEEKDAY_LETTERS.map((d, i) => (
             <span key={i}>{d}</span>
           ))}
         </div>
-        <div className="calendar-grid">
+        <div className={grid}>
           {monthCells(monthKey).map((date, i) => {
-            if (!date) return <span key={i} className="calendar-day blank" />;
+            if (!date) return <span key={i} className={calendarDay({ blank: true })} />;
             const day = byDate.get(date);
             const dayNumber = Number(date.slice(8, 10));
             if (!day) {
@@ -154,7 +248,7 @@ export function CalendarPage() {
                   key={date}
                   type="button"
                   disabled
-                  className={`calendar-day${date === cfg.today ? " today" : ""}`}
+                  className={calendarDay({ today: date === cfg.today })}
                   aria-label={`${formatDay(date)}, no events`}
                 >
                   <span>{dayNumber}</span>
@@ -166,30 +260,31 @@ export function CalendarPage() {
               <button
                 key={date}
                 type="button"
-                className={`calendar-day${date === selectedDate ? " selected" : ""}${date === cfg.today ? " today" : ""}`}
+                className={calendarDay({ selected: date === selectedDate, today: date === cfg.today })}
                 aria-pressed={date === selectedDate}
                 aria-label={`${formatDay(date)}, ${statusLabel(status)}`}
                 onClick={() => setPicked(date)}
               >
                 <span>{dayNumber}</span>
-                <i className={`dot dot-${statusClass(status)}`} />
+                <i className={dot({ status })} />
               </button>
             );
           })}
         </div>
         <section
-          className={`selected-date${selected.slots.some((s) => s.blocked) ? " is-blocked" : ""}`}
+          className={selectedPanel}
+          data-blocked={selected.slots.some((s) => s.blocked) || undefined}
           aria-label="Selected day"
         >
-          <DateBlock date={selected.date} />
-          <div className="date-detail">
-            <div>
+          <DateBlock date={selected.date} style={{ alignSelf: "stretch" }} />
+          <div>
+            <div className={detailHead}>
               <StatusBadge status={selectedStatus} compact />
             </div>
-            <h2>{formatDay(selected.date)}</h2>
+            <h2 className={detailTitle}>{formatDay(selected.date)}</h2>
             {selected.slots.map((s) => (
-              <div key={s.slotId} className="slot">
-                <p className="slot-time">{slotTime(cfg, s.slotId)}</p>
+              <div key={s.slotId} className={slot}>
+                <p className={slotTimeText}>{slotTime(cfg, s.slotId)}</p>
                 <SlotLines slot={s} config={cfg} />
               </div>
             ))}

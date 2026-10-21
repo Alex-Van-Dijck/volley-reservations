@@ -22,9 +22,9 @@ const login = (username: string, password: string) =>
 
 describe("login", () => {
   it("signs in and sets an httpOnly session cookie", async () => {
-    const res = await login("captain1", PASSWORDS.captain);
+    const res = await login("koen", PASSWORDS.captain);
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ username: "captain1", role: "captain", teamId: w.teams[0]!.id });
+    expect(res.json()).toMatchObject({ username: "koen", role: "captain", teamId: w.teams[0]!.id });
     const cookie = res.cookies.find((c) => c.name === "session")!;
     expect(cookie.httpOnly).toBe(true);
     expect(cookie.sameSite).toBe("Lax");
@@ -76,10 +76,10 @@ describe("login", () => {
 
 describe("me and logout", () => {
   it("returns the current user for a valid cookie", async () => {
-    const cookie = await loginAs(app, "captain2", PASSWORDS.captain);
+    const cookie = await loginAs(app, "wilfried", PASSWORDS.captain);
     const res = await app.inject({ url: "/api/auth/me", headers: { cookie } });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ username: "captain2", role: "captain" });
+    expect(res.json()).toMatchObject({ username: "wilfried", role: "captain" });
   });
 
   it("returns 401 without a cookie", async () => {

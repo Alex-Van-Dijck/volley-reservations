@@ -36,7 +36,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await clearBookings(prisma);
   manager = await loginAs(app, "manager", PASSWORDS.manager);
-  cap1 = await loginAs(app, "captain1", PASSWORDS.captain);
+  cap1 = await loginAs(app, "koen", PASSWORDS.captain);
 });
 afterAll(async () => {
   await app.close();

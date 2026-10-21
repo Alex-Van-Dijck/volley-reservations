@@ -14,6 +14,6 @@ describe("CalendarPage layout", () => {
   it("marks a blocked day in the selected panel", async () => {
     renderWithApp(<CalendarPage />);
     await userEvent.click(await screen.findByRole("button", { name: "Thu 29 Oct, Unavailable" }));
-    expect(screen.getByRole("region", { name: "Selected day" })).toHaveClass("is-blocked");
+    expect(screen.getByRole("region", { name: "Selected day" })).toHaveAttribute("data-blocked");
   });
 });

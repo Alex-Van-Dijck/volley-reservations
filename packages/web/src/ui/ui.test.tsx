@@ -10,21 +10,21 @@ describe("StatusBadge", () => {
   it("shows the app label and maps no_training to the dashed style", () => {
     const { container } = render(<StatusBadge status="no_training" />);
     expect(screen.getByText("No training")).toBeInTheDocument();
-    expect(container.querySelector(".badge-no-training")).not.toBeNull();
+    expect(container.querySelector('[data-status="no_training"]')).not.toBeNull();
   });
 
-  it("adds the compact class on request", () => {
+  it("marks the badge compact on request", () => {
     const { container } = render(<StatusBadge status="home" compact />);
-    expect(container.querySelector(".badge-home.badge-compact")).not.toBeNull();
+    expect(container.querySelector('[data-status="home"][data-compact]')).not.toBeNull();
   });
 });
 
 describe("StatusMark", () => {
-  it("is decorative and carries the status class", () => {
+  it("is decorative and carries the status", () => {
     const { container } = render(<StatusMark status="away" />);
     const mark = container.firstElementChild!;
     expect(mark).toHaveAttribute("aria-hidden", "true");
-    expect(mark).toHaveClass("badge-away");
+    expect(mark).toHaveAttribute("data-status", "away");
   });
 });
 

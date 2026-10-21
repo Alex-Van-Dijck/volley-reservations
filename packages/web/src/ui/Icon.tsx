@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { css } from "styled-system/css";
 
 export type IconName =
   | "calendar"
@@ -51,11 +52,13 @@ const PATHS: Record<IconName, ReactNode> = {
   logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />,
 };
 
+const icon = css({ display: "block" });
+
 export function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   return (
     <svg
       aria-hidden="true"
-      className="icon"
+      className={icon}
       width={size}
       height={size}
       viewBox="0 0 24 24"
