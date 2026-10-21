@@ -2,10 +2,15 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useApi } from "../api-context";
 import { useAuth } from "../auth-context";
-import { errorMessage, formatDay, statusLabel } from "../format";
+import { errorMessage, formatDay } from "../format";
 import { useLoad } from "../hooks";
 import type { CalendarSlot, Config, TeamDay, User } from "../types";
 import { BlockPanel } from "./BlockPanel";
+import { DateBlock } from "../ui/DateBlock";
+import { ErrorBanner } from "../ui/ErrorBanner";
+import { Icon } from "../ui/Icon";
+import { PageIntro } from "../ui/PageIntro";
+import { StatusBadge } from "../ui/StatusBadge";
 
 export function ManagePage() {
   const { user, loading } = useAuth();
@@ -24,7 +29,7 @@ function ManageTeam({ user }: { user: User }) {
   const [error, setError] = useState<string | null>(null);
 
   const failure = config.error ?? schedule.error ?? calendar.error;
-  if (failure) return <p role="alert">{failure}</p>;
+  if (failure) return <ErrorBanner message={failure} />;
   if (!config.data || !schedule.data || !calendar.data || teamId === null) return <p>Loading...</p>;
 
   const cfg = config.data;
@@ -43,35 +48,51 @@ function ManageTeam({ user }: { user: User }) {
     }
   }
 
+  const teamName = cfg.teams.find((t) => t.id === teamId)?.name ?? `Team ${teamId}`;
+
   return (
     <section>
-      <h1>Manage</h1>
+      <PageIntro
+        eyebrow="Reservations"
+        title="Manage"
+        copy="Reserve, move or cancel games. Changes are visible club-wide."
+        action={user.role === "manager" ? <span className="manager-pill">Manager access</span> : undefined}
+      />
       {user.role === "manager" && (
-        <label>
-          Team
-          <select value={teamId} onChange={(e) => setPicked(Number(e.target.value))}>
-            {cfg.teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+        <label className="team-picker">
+          <span>Team</span>
+          <div className="select-wrap">
+            <select value={teamId} onChange={(e) => setPicked(Number(e.target.value))}>
+              {cfg.teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <Icon name="chevron" />
+          </div>
         </label>
       )}
-      {error && <p role="alert">{error}</p>}
-      <ul className="rows">
-        {schedule.data.days.map((day) => (
-          <DayRow
-            key={`${teamId}|${day.date}|${day.slotId}`}
-            day={day}
-            slot={slotsByKey.get(`${day.date}|${day.slotId}`)}
-            config={cfg}
-            teamId={teamId}
-            days={schedule.data!.days}
-            run={run}
-          />
-        ))}
-      </ul>
+      {error && <ErrorBanner message={error} />}
+      <div className="manager-block">
+        <div className="manager-block-head">
+          <span className="eyebrow">{teamName}</span>
+          <h2>Field reservations</h2>
+        </div>
+        <ul className="manage-list">
+          {schedule.data.days.map((day) => (
+            <DayRow
+              key={`${teamId}|${day.date}|${day.slotId}`}
+              day={day}
+              slot={slotsByKey.get(`${day.date}|${day.slotId}`)}
+              config={cfg}
+              teamId={teamId}
+              days={schedule.data!.days}
+              run={run}
+            />
+          ))}
+        </ul>
+      </div>
       {user.role === "manager" && <BlockPanel days={calendar.data.days} config={cfg} run={run} />}
     </section>
   );
@@ -103,30 +124,47 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
   const toggle = (next: "reserve" | "move") => setMode(mode === next ? null : next);
 
   return (
-    <li className="row">
-      <div className="row-head">
-        <strong>{formatDay(day.date)}</strong>
-        <span className={`status status-${day.status}`}>{statusLabel(day.status)}</span>
-        {day.fieldId !== null && <span className="muted">{fieldName(day.fieldId)}</span>}
+    <li className="manage-row">
+      <DateBlock date={day.date} />
+      <div className="manage-copy">
+        <StatusBadge status={day.status} compact />
+        <h3>{formatDay(day.date)}</h3>
+        {day.fieldId !== null && <p>{fieldName(day.fieldId)}</p>}
       </div>
       <div className="row-actions">
         {day.eventId ? (
           <>
-            <button type="button" aria-label={`Cancel ${day.date}`} onClick={() => void run(() => api.cancelEvent(day.eventId!))}>
-              Cancel
-            </button>
-            <button type="button" className="secondary" aria-label={`Move ${day.date}`} onClick={() => toggle("move")}>
+            <button
+              type="button"
+              className="outline-button small"
+              aria-label={`Move ${day.date}`}
+              onClick={() => toggle("move")}
+            >
               Move
+            </button>
+            <button
+              type="button"
+              className="danger-button small"
+              aria-label={`Cancel ${day.date}`}
+              onClick={() => void run(() => api.cancelEvent(day.eventId!))}
+            >
+              Cancel
             </button>
           </>
         ) : (
-          <button type="button" aria-label={`Reserve ${day.date}`} onClick={() => toggle("reserve")}>
+          <button
+            type="button"
+            className="solid-button small"
+            aria-label={`Reserve ${day.date}`}
+            onClick={() => toggle("reserve")}
+          >
             Reserve
           </button>
         )}
       </div>
       {mode === "reserve" && (
         <form
+          className="inline-form"
           onSubmit={(e) => {
             e.preventDefault();
             void run(async () => {
@@ -141,7 +179,7 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
             });
           }}
         >
-          <label>
+          <label className="field">
             Type
             <select value={type} onChange={(e) => setType(e.target.value as "home" | "away")}>
               <option value="home" disabled={reserveFields.length === 0}>
@@ -151,7 +189,7 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
             </select>
           </label>
           {type === "home" && (
-            <label>
+            <label className="field">
               Field
               <select value={chosenField ?? ""} onChange={(e) => setReserveField(Number(e.target.value))}>
                 {reserveFields.map((id) => (
@@ -162,13 +200,14 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
               </select>
             </label>
           )}
-          <button type="submit" aria-label={`Save ${day.date}`}>
+          <button type="submit" className="solid-button" aria-label={`Save ${day.date}`}>
             Save
           </button>
         </form>
       )}
       {mode === "move" && (
         <form
+          className="inline-form"
           onSubmit={(e) => {
             e.preventDefault();
             void run(async () => {
@@ -181,7 +220,7 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
             });
           }}
         >
-          <label>
+          <label className="field">
             New date
             <select value={moveDate} onChange={(e) => setMoveDate(e.target.value)}>
               {days.map((d) => (
@@ -192,7 +231,7 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
             </select>
           </label>
           {day.status === "home" && (
-            <label>
+            <label className="field">
               New field
               <select value={chosenMoveField ?? ""} onChange={(e) => setMoveField(Number(e.target.value))}>
                 {config.fields.map((f) => (
@@ -203,7 +242,7 @@ function DayRow({ day, config, teamId, days, run }: RowProps) {
               </select>
             </label>
           )}
-          <button type="submit" aria-label={`Save ${day.date}`}>
+          <button type="submit" className="solid-button" aria-label={`Save ${day.date}`}>
             Save
           </button>
         </form>
