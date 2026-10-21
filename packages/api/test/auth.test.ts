@@ -104,4 +104,14 @@ describe("me and logout", () => {
     expect(me.statusCode).toBe(401);
     expect(await prisma.session.count()).toBe(0);
   });
+
+  it("expires a session older than 30 days even if it was used recently", async () => {
+    const cookie = await loginAs(app, "manager", PASSWORDS.manager);
+    await prisma.session.updateMany({
+      data: { createdAt: new Date(NOW.getTime() - 31 * 86_400_000), lastUsedAt: NOW },
+    });
+    const me = await app.inject({ url: "/api/auth/me", headers: { cookie } });
+    expect(me.statusCode).toBe(401);
+    expect(await prisma.session.count()).toBe(0);
+  });
 });

@@ -6,6 +6,7 @@ import type { Actor } from "./rules.js";
 
 export const SESSION_COOKIE = "session";
 const SESSION_MAX_IDLE_MS = 30 * 86_400_000;
+const SESSION_MAX_AGE_MS = 30 * 86_400_000;
 const TOUCH_AFTER_MS = 3_600_000;
 
 export const hashToken = (token: string): string => createHash("sha256").update(token).digest("hex");
@@ -27,7 +28,8 @@ export async function actorFromToken(deps: Deps, token: string): Promise<Actor |
   if (!session) return null;
   const now = deps.now();
   const idle = now.getTime() - session.lastUsedAt.getTime();
-  if (idle > SESSION_MAX_IDLE_MS) {
+  const age = now.getTime() - session.createdAt.getTime();
+  if (idle > SESSION_MAX_IDLE_MS || age > SESSION_MAX_AGE_MS) {
     await deps.prisma.session.deleteMany({ where: { id: session.id } });
     return null;
   }

@@ -40,7 +40,7 @@ export function authRoutes(app: App, deps: Deps): void {
       sameSite: "lax",
       secure: deps.production,
       path: "/",
-      // the server enforces the 30 day sliding expiry, the cookie just has to outlive it
+      // the server enforces the 30 day idle and absolute expiry, the cookie just has to outlive it
       maxAge: 365 * 86_400,
     });
     return { id: user.id, username: user.username, role: user.role, teamId: user.teamId };
