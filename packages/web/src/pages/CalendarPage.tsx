@@ -19,37 +19,53 @@ function dayStatus(day: CalendarDay): TeamStatus {
   return "no_training";
 }
 
-function SlotLines({ slot, config }: { slot: CalendarSlot; config: Config }) {
+const FIELD_SECTIONS = 3;
+
+function fieldSection(slot: CalendarSlot, config: Config, fieldId: number) {
+  const name = fieldName(config, fieldId);
+  if (slot.blocked) return { state: "blocked", label: "Blocked", name };
+  const home = slot.homeGames.find((g) => g.fieldId === fieldId);
+  if (home) return { state: "home", label: teamName(config, home.teamId), name };
+  if (slot.practiceFieldIds.includes(fieldId)) return { state: "training", label: "Free to practice", name };
+  return { state: "unavailable", label: "Not available", name };
+}
+
+function breakAfterFirstWord(label: string) {
+  const space = label.indexOf(" ");
+  if (space === -1) return label;
   return (
     <>
-      {slot.blocked && (
-        <div className="slot-line">
-          <StatusMark status="unavailable" />
-          <p>{slot.blockReason ? `Blocked: ${slot.blockReason}` : "Blocked"}</p>
-        </div>
-      )}
-      {slot.homeGames.map((g) => (
-        <div key={g.eventId} className="slot-line">
-          <StatusMark status="home" />
-          <p>{`${teamName(config, g.teamId)} on ${fieldName(config, g.fieldId)}`}</p>
-        </div>
-      ))}
+      {label.slice(0, space + 1)}
+      <br className="mobile-break" />
+      {label.slice(space + 1)}
+    </>
+  );
+}
+
+function SlotLines({ slot, config }: { slot: CalendarSlot; config: Config }) {
+  const sections = config.fields.slice(0, FIELD_SECTIONS - 1).map((f) => ({ id: f.id, ...fieldSection(slot, config, f.id) }));
+  const spare = FIELD_SECTIONS - sections.length;
+
+  return (
+    <>
+      <div className="field-strip">
+        {sections.map((s) => (
+          <div key={s.id} className={`field-section field-${s.state}`}>
+            <span className="field-name">{s.name}</span>
+            <strong>{breakAfterFirstWord(s.label)}</strong>
+          </div>
+        ))}
+        {Array.from({ length: spare }, (_, i) => (
+          <div key={`spare-${i}`} className="field-section field-spare" aria-hidden="true" />
+        ))}
+      </div>
+      {slot.blocked && slot.blockReason && <p className="slot-note">{`Blocked: ${slot.blockReason}`}</p>}
       {slot.awayGames.map((g) => (
         <div key={g.eventId} className="slot-line">
           <StatusMark status="away" />
           <p>{`${teamName(config, g.teamId)} away`}</p>
         </div>
       ))}
-      {!slot.blocked && (
-        <div className="slot-line">
-          <StatusMark status={slot.practiceFieldIds.length > 0 ? "training" : "no_training"} />
-          <p>
-            {slot.practiceFieldIds.length > 0
-              ? `Free to practice: ${slot.practiceFieldIds.map((id) => fieldName(config, id)).join(", ")}`
-              : "No free field"}
-          </p>
-        </div>
-      )}
     </>
   );
 }

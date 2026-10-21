@@ -13,9 +13,9 @@ describe("CalendarPage", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Thu 22 Oct" })).toBeInTheDocument();
     const panel = within(selectedPanel());
     expect(panel.getByText("20:00-22:00")).toBeInTheDocument();
-    expect(panel.getByText("Team 1 on Field 1")).toBeInTheDocument();
+    expect(panel.getByText("Field 1").nextElementSibling).toHaveTextContent("Team 1");
+    expect(panel.getByText("Field 2").nextElementSibling).toHaveTextContent("Free to practice");
     expect(panel.getByText("Team 2 away")).toBeInTheDocument();
-    expect(panel.getByText("Free to practice: Field 2")).toBeInTheDocument();
   });
 
   it("shows the status of each day with events and disables days without", async () => {
@@ -39,7 +39,7 @@ describe("CalendarPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Next month" }));
     expect(screen.getByRole("heading", { level: 1, name: "November 2026" })).toBeInTheDocument();
-    expect(within(selectedPanel()).getByText("Free to practice: Field 1, Field 2")).toBeInTheDocument();
+    expect(within(selectedPanel()).getAllByText("Free to practice")).toHaveLength(2);
     expect(screen.getByRole("button", { name: "Next month" })).toBeDisabled();
 
     await userEvent.click(screen.getByRole("button", { name: "Previous month" }));
