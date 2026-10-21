@@ -31,6 +31,12 @@ describe("login", () => {
     expect(res.body).not.toContain("passwordHash");
   });
 
+  it("matches usernames case-insensitively", async () => {
+    const res = await login("KOEN", PASSWORDS.captain);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ username: "koen" });
+  });
+
   it("stores only a hash of the token", async () => {
     const res = await login("manager", PASSWORDS.manager);
     const token = res.cookies[0]!.value;

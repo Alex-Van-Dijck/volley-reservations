@@ -10,7 +10,6 @@ export default defineConfig({
   staticCss: {
     recipes: {
       calendarDay: [{ selected: ["true"], today: ["true"], blank: ["true"] }],
-      dot: [{ status: ["*"] }],
       fieldSection: [{ state: ["*"] }],
       badge: [{ status: ["*"], compact: ["true"] }],
       button: [{ visual: ["*"], size: ["*"], full: ["true"] }],

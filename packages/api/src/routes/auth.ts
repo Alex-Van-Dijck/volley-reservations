@@ -18,13 +18,14 @@ export function authRoutes(app: App, deps: Deps): void {
     if (typeof body?.username !== "string" || typeof body.password !== "string") {
       throw new AppError("VALIDATION_ERROR", "username and password are required");
     }
+    const username = body.username.toLowerCase();
     const now = deps.now().getTime();
-    const pairKey = `${req.ip}|${body.username.toLowerCase()}`;
+    const pairKey = `${req.ip}|${username}`;
     if (perPair.isBlocked(pairKey, now) || perIp.isBlocked(req.ip, now)) {
       throw new AppError("RATE_LIMITED", "Too many failed attempts, try again later");
     }
 
-    const user = await deps.prisma.user.findUnique({ where: { username: body.username } });
+    const user = await deps.prisma.user.findUnique({ where: { username } });
     // always verify against some hash so unknown users cost the same time as wrong passwords
     const valid = await verifyPassword(user?.passwordHash ?? (await getDummyHash()), body.password);
     if (!user || !valid) {
