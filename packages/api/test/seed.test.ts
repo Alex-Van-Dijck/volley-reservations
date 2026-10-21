@@ -16,7 +16,7 @@ describe("seed", () => {
     const slot = await prisma.slot.findFirstOrThrow();
     expect(slot.weekday).toBe(4);
     expect(slot.start.toISOString()).toBe("1970-01-01T20:00:00.000Z");
-    expect((await prisma.setting.findUniqueOrThrow({ where: { key: "season_end" } })).value).toBe("2027-08-31");
+    expect((await prisma.setting.findUniqueOrThrow({ where: { key: "season_end" } })).value).toBe("2027-05-27");
     expect((await prisma.setting.findUniqueOrThrow({ where: { key: "timezone" } })).value).toBe("Europe/Brussels");
     const manager = await prisma.user.findUniqueOrThrow({ where: { username: "manager" } });
     expect(manager.role).toBe("manager");

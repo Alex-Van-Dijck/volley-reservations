@@ -55,12 +55,12 @@ export async function seed(
   const slot = await prisma.slot.findFirstOrThrow({ where: { weekday: 4 } });
 
   for (const [key, value] of [
-    ["season_end", "2027-08-31"],
+    ["season_end", "2027-05-27"],
     ["timezone", "Europe/Brussels"],
   ] as const) {
     await prisma.setting.upsert({
       where: { key },
-      update: {},
+      update: key === "season_end" ? { value } : {},
       create: { key, value },
     });
   }

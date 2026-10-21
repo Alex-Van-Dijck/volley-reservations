@@ -14,7 +14,7 @@ export const config: Config = {
     { id: 2, name: "Field 2", size: "small" },
   ],
   slots: [{ id: 1, weekday: 4, start: "20:00", end: "22:00" }],
-  seasonEnd: "2027-08-31",
+  seasonEnd: "2027-05-27",
   today: "2026-10-20",
   timezone: "Europe/Brussels",
 };

@@ -31,7 +31,7 @@ describe("GET /api/config", () => {
     expect(body.teams).toHaveLength(4);
     expect(body.fields.map((f: { name: string }) => f.name)).toEqual(["Field 1", "Field 2"]);
     expect(body.slots).toEqual([{ id: w.slot.id, weekday: 4, start: "20:00", end: "22:00" }]);
-    expect(body.seasonEnd).toBe("2027-08-31");
+    expect(body.seasonEnd).toBe("2027-05-27");
     expect(body.timezone).toBe("Europe/Brussels");
     expect(body.today).toBe("2026-10-20");
   });
@@ -70,18 +70,18 @@ describe("GET /api/calendar", () => {
   });
 
   it("clips the range to the season end", async () => {
-    const res = await app.inject({ url: "/api/calendar?from=2027-08-01&to=2027-09-30" });
+    const res = await app.inject({ url: "/api/calendar?from=2027-05-01&to=2027-06-30" });
     expect(res.statusCode).toBe(200);
     expect(res.json().days.map((d: { date: string }) => d.date)).toEqual([
-      "2027-08-05",
-      "2027-08-12",
-      "2027-08-19",
-      "2027-08-26",
+      "2027-05-06",
+      "2027-05-13",
+      "2027-05-20",
+      "2027-05-27",
     ]);
   });
 
   it("returns no days when the range starts after the season end", async () => {
-    const res = await app.inject({ url: "/api/calendar?from=2027-09-01&to=2027-09-30" });
+    const res = await app.inject({ url: "/api/calendar?from=2027-06-01&to=2027-06-30" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ days: [] });
   });
@@ -110,18 +110,18 @@ describe("GET /api/teams/:id/schedule", () => {
   });
 
   it("clips the range to the season end", async () => {
-    const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-08-01&to=2027-09-30` });
+    const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-05-01&to=2027-06-30` });
     expect(res.statusCode).toBe(200);
     expect(res.json().days.map((d: { date: string }) => d.date)).toEqual([
-      "2027-08-05",
-      "2027-08-12",
-      "2027-08-19",
-      "2027-08-26",
+      "2027-05-06",
+      "2027-05-13",
+      "2027-05-20",
+      "2027-05-27",
     ]);
   });
 
   it("returns no days when the range starts after the season end", async () => {
-    const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-09-01&to=2027-09-30` });
+    const res = await app.inject({ url: `/api/teams/${w.teams[0]!.id}/schedule?from=2027-06-01&to=2027-06-30` });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ teamId: w.teams[0]!.id, days: [] });
   });

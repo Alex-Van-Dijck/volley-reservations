@@ -105,7 +105,7 @@ describe("create", () => {
     ["FIELD_REQUIRED", () => bookBody(0, THU1, "home", null)],
     ["WEEKDAY_MISMATCH", () => bookBody(0, "2026-10-23", "home", 0)],
     ["DATE_IN_PAST", () => bookBody(0, PAST_THU, "home", 0)],
-    ["OUT_OF_SEASON", () => bookBody(0, "2027-09-02", "home", 0)],
+    ["OUT_OF_SEASON", () => bookBody(0, "2027-06-03", "home", 0)],
   ])("rejects %s with 422", async (code, makeBody) => {
     const res = await send("POST", "/api/events", manager, makeBody());
     expect(res.statusCode).toBe(422);
