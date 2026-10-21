@@ -1,6 +1,11 @@
 import { useApi } from "../api-context";
 import { formatDay, formatSlot } from "../format";
 import { useLoad } from "../hooks";
+import { DateBlock } from "../ui/DateBlock";
+import { ErrorBanner } from "../ui/ErrorBanner";
+import { Legend } from "../ui/Legend";
+import { PageIntro } from "../ui/PageIntro";
+import { StatusMark } from "../ui/StatusBadge";
 
 export function CalendarPage() {
   const api = useApi();
@@ -8,7 +13,7 @@ export function CalendarPage() {
   const calendar = useLoad(() => api.calendar(), [api]);
 
   const failure = config.error ?? calendar.error;
-  if (failure) return <p role="alert">{failure}</p>;
+  if (failure) return <ErrorBanner message={failure} />;
   if (!config.data || !calendar.data) return <p>Loading...</p>;
 
   const cfg = config.data;
@@ -18,30 +23,52 @@ export function CalendarPage() {
 
   return (
     <section>
-      <h1>Club calendar</h1>
-      <ul className="cards">
+      <PageIntro
+        eyebrow="Fields and practice"
+        title="Club calendar"
+        copy="A shared view of home games, away games and free fields."
+      />
+      <Legend />
+      <ul className="event-grid">
         {calendar.data.days.map((day) => (
-          <li key={day.date} className="card">
-            <h2>{formatDay(day.date)}</h2>
-            {day.slots.map((s) => (
-              <div key={s.slotId} className="slot">
-                <p className="muted">{slotOf(s.slotId) ? formatSlot(slotOf(s.slotId)!) : ""}</p>
-                {s.blocked && <p className="blocked">{s.blockReason ? `Blocked: ${s.blockReason}` : "Blocked"}</p>}
-                {s.homeGames.map((g) => (
-                  <p key={g.eventId}>{`${team(g.teamId)} on ${field(g.fieldId)}`}</p>
-                ))}
-                {s.awayGames.map((g) => (
-                  <p key={g.eventId} className="muted">{`${team(g.teamId)} away`}</p>
-                ))}
-                {!s.blocked && (
-                  <p className="practice">
-                    {s.practiceFieldIds.length > 0
-                      ? `Free to practice: ${s.practiceFieldIds.map(field).join(", ")}`
-                      : "No free field"}
-                  </p>
-                )}
-              </div>
-            ))}
+          <li key={day.date} className={`event-card${day.slots.some((s) => s.blocked) ? " is-blocked" : ""}`}>
+            <DateBlock date={day.date} />
+            <div>
+              <h2>{formatDay(day.date)}</h2>
+              {day.slots.map((s) => (
+                <div key={s.slotId} className="slot">
+                  <p className="slot-time">{slotOf(s.slotId) ? formatSlot(slotOf(s.slotId)!) : ""}</p>
+                  {s.blocked && (
+                    <div className="slot-line">
+                      <StatusMark status="unavailable" />
+                      <p>{s.blockReason ? `Blocked: ${s.blockReason}` : "Blocked"}</p>
+                    </div>
+                  )}
+                  {s.homeGames.map((g) => (
+                    <div key={g.eventId} className="slot-line">
+                      <StatusMark status="home" />
+                      <p>{`${team(g.teamId)} on ${field(g.fieldId)}`}</p>
+                    </div>
+                  ))}
+                  {s.awayGames.map((g) => (
+                    <div key={g.eventId} className="slot-line">
+                      <StatusMark status="away" />
+                      <p>{`${team(g.teamId)} away`}</p>
+                    </div>
+                  ))}
+                  {!s.blocked && (
+                    <div className="slot-line">
+                      <StatusMark status={s.practiceFieldIds.length > 0 ? "training" : "no_training"} />
+                      <p>
+                        {s.practiceFieldIds.length > 0
+                          ? `Free to practice: ${s.practiceFieldIds.map(field).join(", ")}`
+                          : "No free field"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </li>
         ))}
       </ul>
