@@ -17,29 +17,39 @@ enum Role {
   manager
 }
 
+/// A volleyball team that owns events and has users assigned to it.
 model Team {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-  events Event[]
-  users  User[]
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  events    Event[]
+  users     User[]
 }
 
+/// A physical venue or court where events can be played.
 model Field {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-  size   String
-  events Event[]
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  size      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  events    Event[]
 }
 
+/// A recurring time window on a given weekday that events are booked into.
 model Slot {
-  id      Int      @id @default(autoincrement())
-  weekday Int
-  start   DateTime @db.Time(0)
-  end     DateTime @db.Time(0)
-  events  Event[]
-  blocks  Block[]
+  id        Int      @id @default(autoincrement())
+  weekday   Int
+  start     DateTime @db.Time(0)
+  end       DateTime @db.Time(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  events    Event[]
+  blocks    Block[]
 }
 
+/// A login account with a role (captain or manager), optionally linked to a team.
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   username     String    @unique
@@ -49,8 +59,11 @@ model User {
   team         Team?     @relation(fields: [teamId], references: [id])
   sessions     Session[]
   events       Event[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
 }
 
+/// A login session for a user, identified by a hash of its token.
 model Session {
   id         String   @id @default(uuid()) @db.Uuid
   tokenHash  String   @unique
@@ -58,8 +71,10 @@ model Session {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   lastUsedAt DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
+/// A home or away booking for a team on a date, slot, and optionally a field.
 model Event {
   id        String    @id @default(uuid()) @db.Uuid
   teamId    Int
@@ -72,22 +87,30 @@ model Event {
   slot      Slot      @relation(fields: [slotId], references: [id])
   field     Field?    @relation(fields: [fieldId], references: [id])
   creator   User      @relation(fields: [createdBy], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
 
   @@unique([teamId, date, slotId])
   @@unique([fieldId, date, slotId])
 }
 
+/// A date and slot that is closed for booking, with an optional reason.
 model Block {
-  id     String   @id @default(uuid()) @db.Uuid
-  date   DateTime @db.Date
-  slotId Int
-  reason String?
-  slot   Slot     @relation(fields: [slotId], references: [id])
+  id        String   @id @default(uuid()) @db.Uuid
+  date      DateTime @db.Date
+  slotId    Int
+  reason    String?
+  slot      Slot     @relation(fields: [slotId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([date, slotId])
 }
 
+/// A key/value application setting.
 model Setting {
-  key   String @id
-  value String
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
