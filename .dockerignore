@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/.vite
+**/styled-system
+.git
+.claude
+.github
+.playwright-mcp
+.superpowers
+docs
+**/.env
+**/.env.*
+!**/.env.example
+packages/api/src/generated
+packages/web/test-results
+packages/web/playwright-report

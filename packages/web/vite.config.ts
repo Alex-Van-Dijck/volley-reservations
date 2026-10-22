@@ -8,7 +8,8 @@ export default defineConfig({
   resolve: {
     alias: { "styled-system": fileURLToPath(new URL("./styled-system", import.meta.url)) },
   },
-  server: { proxy: { "/api": "http://localhost:3000" } },
+  server: { proxy: { "/api": "http://localhost:3000" }, allowedHosts: [".trycloudflare.com"] },
+  preview: { proxy: { "/api": "http://localhost:3000" }, allowedHosts: [".trycloudflare.com"] },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test-setup.ts"],

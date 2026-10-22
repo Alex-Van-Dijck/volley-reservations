@@ -28,7 +28,18 @@ The API test setup applies migrations to `volley_test` itself, so only `docker c
 
 ## Deploy
 
-Build with `pnpm --filter @volley/web build` and serve `packages/web/dist` and the API from the same origin
-(for example one reverse proxy that serves the static files and forwards `/api` to the Fastify process).
-Set `TRUST_PROXY=1` when running behind a reverse proxy, otherwise the per-IP login rate limit counts all users as one client.
-Set `NODE_ENV=production` so the session cookie is `Secure`, and serve over HTTPS (required for the service worker).
+The app must be served from one HTTPS origin: the frontend calls relative `/api` paths, and the service worker (needed to install the PWA) only works over HTTPS.
+
+`docker-compose.prod.yml` runs Postgres, the API, and Caddy, which serves the built frontend, proxies `/api` to the API, and gets a Let's Encrypt certificate automatically.
+
+On the server (any Docker host with ports 80 and 443 open, and a DNS record pointing your domain at it):
+
+```bash
+cp .env.example .env              # set DOMAIN, POSTGRES_PASSWORD and the seed passwords
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml exec api node_modules/.bin/tsx prisma/run-seed.ts   # first deploy only
+```
+
+The API container applies pending migrations on every start. The compose file sets `NODE_ENV=production` (via the image) so the session cookie is `Secure`, and `TRUST_PROXY=1` so the per-IP login rate limit sees real client addresses.
+
+To deploy an update, pull the new code and run the `up -d --build` command again. Back up the database with `docker compose -f docker-compose.prod.yml exec db pg_dump -U volley volley > backup.sql`.
