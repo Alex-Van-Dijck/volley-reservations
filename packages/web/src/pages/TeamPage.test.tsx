@@ -11,6 +11,9 @@ describe("TeamPage", () => {
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(screen.getByText("Training")).toBeInTheDocument();
     expect(screen.getByText("Field 1, Field 2")).toBeInTheDocument();
+    expect(screen.getByText("Home game").closest("li")).toHaveAttribute("data-status", "home");
+    expect(screen.getByText("Unavailable").closest("li")).toHaveAttribute("data-status", "unavailable");
+    expect(screen.getByText("Training").closest("li")).toHaveAttribute("data-status", "training");
     expect(api.teamSchedule).toHaveBeenCalledWith(1);
   });
 
