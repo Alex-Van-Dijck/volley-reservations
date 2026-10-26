@@ -36,6 +36,17 @@ const card = css({
   alignItems: "center",
   gap: { base: "20px", mdDown: "10px" },
   _hover: { borderColor: "ink" },
+  "&[data-status=home], &[data-status=away]": {
+    bg: "ink",
+    borderColor: "ink",
+    color: "paper",
+    "& p, & span": { color: "paper" },
+    "& [data-status] > span": { borderColor: "paper" },
+  },
+  "&[data-status=home] [data-status] > span": { bg: "paper" },
+  "&[data-status=training]": { bg: "soft" },
+  "&[data-status=no_training]": { bg: "crimsonTint" },
+  "&[data-status=unavailable]": { bg: "crimsonTint" },
 });
 
 const copy = css({
@@ -85,7 +96,7 @@ export function TeamPage() {
         </div>
         <ul className={list}>
           {days.map((d) => (
-            <li key={`${d.date}|${d.slotId}`} className={card}>
+            <li key={`${d.date}|${d.slotId}`} className={card} data-status={d.status}>
               <DateBlock date={d.date} />
               <div className={copy}>
                 <StatusBadge status={d.status} compact />

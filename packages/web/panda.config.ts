@@ -63,6 +63,7 @@ export default defineConfig({
           soft: { value: { base: "#eeeeeb", _dark: "#222220" } },
           crimson: { value: { base: "#c8102e", _dark: "#ed2648" } },
           crimsonDark: { value: "#c8102e" },
+          crimsonTint: { value: { base: "#fbe9ec", _dark: "#2a1216" } },
         },
       },
     },
